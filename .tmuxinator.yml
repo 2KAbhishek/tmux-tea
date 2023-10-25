@@ -1,0 +1,10 @@
+name: tmux-tea
+root: <%= ENV["PWD"] %>
+
+windows:
+  - neovim:
+      layout: main-vertical
+      panes:
+        - nvim bin/tea.sh
+        - nvim .tmuxinator.yml
+  - git: lazygit
