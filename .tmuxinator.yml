@@ -3,8 +3,8 @@ root: <%= ENV["PWD"] %>
 
 windows:
   - neovim:
-      layout: main-vertical
+      layout: main-horizontal
       panes:
-        - nvim bin/tea.sh
         - nvim .tmuxinator.yml
+        - nvim bin/tea.sh
   - git: lazygit
