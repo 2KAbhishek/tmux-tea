@@ -148,6 +148,8 @@ if [ "$SESSION" = "" ]; then # session is missing
 	SESSION="$SESSION_NAME"
 	if [ -e "$RESULT"/.tmuxinator.yml ]; then
 		cd "$RESULT" && tmuxinator local
+	elif [ -e "$HOME/.config/tmuxinator/$SESSION.yml" ]; then
+		tmuxinator "$SESSION"
 	else
 		tmux new-session -d -s "$SESSION" -c "$RESULT" # create session
 	fi
