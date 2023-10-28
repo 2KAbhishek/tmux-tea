@@ -20,7 +20,7 @@
 <a href="https://github.com/2KAbhishek/tmux-tea/pulse">
 <img alt="Last Updated" src="https://img.shields.io/github/last-commit/2kabhishek/tmux-tea?style=flat&color=e06c75&label="> </a>
 
-<h3>Short Sweet Headline 🎇🎉</h3>
+<h3>tmux sessions as easy as tea ☕🪟</h3>
 
 <figure>
   <img src="images/screenshot.png" alt="tmux-tea in action">
@@ -50,7 +50,7 @@ tmux-tea is a `<utility/tool>` that allows `<target_audience>` to `<action>`.
 ```bash
 git clone https://github.com/2kabhishek/tmux-tea
 cd tmux-tea
-<install_command>
+ln -sfnv $PWD/bin/tea.sh  ~/.local/bin/t
 ```
 
 ### 💻 Usage
