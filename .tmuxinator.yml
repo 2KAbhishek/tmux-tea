@@ -2,9 +2,9 @@ name: tmux-tea
 root: <%= ENV["PWD"] %>
 
 windows:
-  - neovim:
+  - 'neovim  ': nvim bin/tea.sh
+  - 'git  ':
       layout: main-horizontal
       panes:
+        - lazygit
         - nvim .tmuxinator.yml
-        - nvim bin/tea.sh
-  - git: lazygit
