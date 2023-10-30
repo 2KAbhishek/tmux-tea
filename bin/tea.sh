@@ -36,7 +36,8 @@ if [ "$TMUX_RUNNING" -eq 0 ]; then
 fi
 
 get_sessions_by_last_used() {
-	tmux list-sessions -F '#{session_last_attached} #{session_name}' | sort --numeric-sort --reverse | awk '{print $2}'
+    tmux list-sessions -F '#{session_last_attached} #{session_name}' | \
+        sort --numeric-sort --reverse | awk '{print $2}' | grep -v "$(tmux display-message -p '#S')"
 }
 
 get_zoxide_results() {
