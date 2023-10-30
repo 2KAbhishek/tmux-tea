@@ -23,7 +23,7 @@
 <h3>tmux sessions as easy as tea ☕🪟</h3>
 
 <figure>
-  <img src="images/screenshot.png" alt="tmux-tea in action">
+  <img src="images/screenshot.jpg" alt="tmux-tea in action">
   <br/>
   <figcaption>tmux-tea in action</figcaption>
 </figure>
