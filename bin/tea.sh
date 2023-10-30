@@ -15,6 +15,7 @@ ZOXIDE_BIND="ctrl-x:change-prompt(  )+reload(zoxide query -l | sed -e \"$H
 FIND_BIND="ctrl-f:change-prompt(  )+reload(fd -H -d 2 -t d . ~)"
 TAB_BIND="tab:down,btab:up"
 PROMPT='  '
+MARKER=''
 PREVIEW="tmux list-panes -t {} -aF '#S-  #I:#W:#P   #T #{window_active}:#{pane_active}' | grep {}- | cut -d ' ' -f 2-"
 
 # determine if the tmux server is running
@@ -81,45 +82,26 @@ else
 	attached)
 		RESULT=$(
 			(get_fzf_results) | fzf-tmux \
-				--bind "$FIND_BIND" \
-				--bind "$SESSION_BIND" \
-				--bind "$TAB_BIND" \
-				--bind "$ZOXIDE_BIND" \
-				--border-label "$BORDER_LABEL" \
-				--header "$HEADER" \
-				--no-sort \
-				--prompt "$PROMPT" \
-				--preview "$PREVIEW" \
+				--bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" \
+				--bind "$ZOXIDE_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
+				--no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW" \
 				"$FZF_TMUX_OPTS"
 		)
 		;;
 	detached)
 		RESULT=$(
 			(get_fzf_results) | fzf \
-				--bind "$FIND_BIND" \
-				--bind "$SESSION_BIND" \
-				--bind "$TAB_BIND" \
-				--bind "$ZOXIDE_BIND" \
-				--border \
-				--border-label "$BORDER_LABEL" \
-				--header "$HEADER" \
-				--no-sort \
-				--preview "$PREVIEW" \
-				--prompt "$PROMPT"
+				--bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" \
+				--bind "$ZOXIDE_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
+                --no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW"
 		)
 		;;
 	serverless)
 		RESULT=$(
 			(get_fzf_results) | fzf \
-				--bind "$FIND_BIND" \
-				--bind "$TAB_BIND" \
-				--bind "$ZOXIDE_BIND" \
-				--border \
-				--border-label "$BORDER_LABEL" \
-				--header " ^x zoxide ^f find" \
-				--no-sort \
-				--preview "$PREVIEW" \
-				--prompt "$PROMPT"
+				--bind "$FIND_BIND" --bind "$TAB_BIND" --bind "$ZOXIDE_BIND" \
+				--border-label "$BORDER_LABEL" --header "$HEADER" --no-sort \
+				--prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW"
 		)
 		;;
 	esac
@@ -165,4 +147,3 @@ serverless)
 	tmux attach -t "$SESSION"
 	;;
 esac
-
