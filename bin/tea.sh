@@ -36,8 +36,8 @@ if [ "$TMUX_RUNNING" -eq 0 ]; then
 fi
 
 get_sessions_by_last_used() {
-    tmux list-sessions -F '#{session_last_attached} #{session_name}' | \
-        sort --numeric-sort --reverse | awk '{print $2}' | grep -v "$(tmux display-message -p '#S')"
+	tmux list-sessions -F '#{session_last_attached} #{session_name}' |
+		sort --numeric-sort --reverse | awk '{print $2}' | grep -v "$(tmux display-message -p '#S')"
 }
 
 get_zoxide_results() {
@@ -94,7 +94,7 @@ else
 			(get_fzf_results) | fzf \
 				--bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" \
 				--bind "$ZOXIDE_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
-                --no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW"
+				--no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW"
 		)
 		;;
 	serverless)
