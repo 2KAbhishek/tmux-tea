@@ -46,18 +46,12 @@ get_zoxide_results() {
 
 get_fzf_results() {
 	if [ "$TMUX_RUNNING" -eq 0 ]; then
-		fzf_default_results="$(tmux show -gqv '@t-fzf-default-results')"
-		case $fzf_default_results in
-		sessions)
-			get_sessions_by_last_used
-			;;
-		zoxide)
+		SESSIONS=$(get_sessions_by_last_used)
+		if [ "$SESSIONS" != "" ]; then
+			echo "$SESSIONS" && get_zoxide_results
+		else
 			get_zoxide_results
-			;;
-		*)
-			get_sessions_by_last_used && get_zoxide_results
-			;;
-		esac
+		fi
 	else
 		get_zoxide_results
 	fi
