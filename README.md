@@ -30,26 +30,32 @@
 
 </div>
 
-tmux-tea is a `<utility/tool>` that allows `<target_audience>` to `<action>`.
+tmux-tea is a tmux session manager aimed at simplifying and speeding up how you interact with tmux sessions.
+It's a one key solution to all your tmux session needs.
 
 ## ✨ Features
 
-- Supports foo
-- Can do bar
-- Works with bazz
+- Integrations with tmuxinator for specific session configs
+- Integrations with fzf and zoxide for fuzzy session and dir navigation
+- Supports session previews
 
 ## Setup
 
 ### ⚡ Requirements
 
-- foo >= bar
-- bazz
+- tmux, fzf, zoxide (required)
+- tmuxinator (recommended)
 
 ### 🚀 Installation
 
+Add the following to your `~/.tmux.conf`
+
 ```bash
-git clone https://github.com/2kabhishek/tmux-tea
-cd tmux-tea
+set -g @plugin '2kabhishek/tmux-tea'
+```
+
+```bash
+cd ~/.tmux/plugins/tmux-tea # replace ~/.tmux/plugins with your plugin installation path
 ln -sfnv $PWD/bin/tea.sh  ~/.local/bin/t
 ```
 
