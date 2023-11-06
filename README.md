@@ -62,9 +62,10 @@ ln -sfnv $PWD/bin/tea.sh  ~/.local/bin/t # Add t to $PATH
 
 ### 💻 Usage
 
-By default, `tea` is mapped to `<prefix> + t`, this can be configured with the `@tea-bind` option
+There are two ways to open tea
 
-I recommend installing [tmux-tilit](https://github.com/2kabhishek/tmux-tilit) for a simpler `<C-t>` binding and overall smoother experience
+- `<prefix> + t`, this can be configured with the `@tea-bind` option
+- `<C-t>` alternate binding for a smoother experience.
 
 #### tmuxinator integration
 

@@ -13,3 +13,6 @@ tmux_option_or_fallback() {
 
 tmux bind-key "$(tmux_option_or_fallback "@tea-bind" "t")" run-shell "$CURRENT_DIR/bin/tea.sh"
 
+# Open tea on control + t
+tmux bind-key -n C-t run-shell "$CURRENT_DIR/bin/tea.sh"
+
