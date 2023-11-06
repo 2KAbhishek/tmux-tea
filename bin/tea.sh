@@ -57,7 +57,7 @@ get_fzf_results() {
 	fi
 }
 
-if [ $# -eq 1 ]; then # when t ran with argument
+if [ $# -eq 1 ]; then
 	zoxide query "$1" &>/dev/null
 	ZOXIDE_RESULT_EXIT_CODE=$?
 	if [ $ZOXIDE_RESULT_EXIT_CODE -eq 0 ]; then

@@ -11,4 +11,5 @@ tmux_option_or_fallback() {
 	echo "$option_value"
 }
 
-tmux bind-key "$(tmux_option_or_fallback "@t-bind" "t")" run-shell "$CURRENT_DIR/bin/tea.sh"
+tmux bind "$(tmux_option_or_fallback "@tea-bind" "C-t")" run-shell "$CURRENT_DIR/bin/tea.sh"
+
