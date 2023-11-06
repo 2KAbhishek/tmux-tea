@@ -35,16 +35,17 @@ It's a one key solution to all your tmux session needs.
 
 ## ✨ Features
 
-- Integrations with tmuxinator for specific session configs
-- Integrations with fzf and zoxide for fuzzy session and dir navigation
-- Supports session previews
+-   Integrations with tmuxinator for session specific configs
+-   Integrations with fzf for fuzzy search
+-   Supports session previews
+-   Integrations with zoxide for directory based session creation
 
 ## Setup
 
 ### ⚡ Requirements
 
-- tmux, fzf, zoxide (required)
-- tmuxinator (recommended)
+-   tmux, fzf, zoxide (required)
+-   tmuxinator (recommended)
 
 ### 🚀 Installation
 
@@ -56,47 +57,55 @@ set -g @plugin '2kabhishek/tmux-tea'
 
 ```bash
 cd ~/.tmux/plugins/tmux-tea # replace ~/.tmux/plugins with your plugin installation path
-ln -sfnv $PWD/bin/tea.sh  ~/.local/bin/t
+ln -sfnv $PWD/bin/tea.sh  ~/.local/bin/t # Add t to $PATH
 ```
 
 ### 💻 Usage
 
+By default, `tea` is mapped to `<prefix> + t`, this can be configured with the `@tea-bind` option
+
+I recommend installing [tmux-tilit](https://github.com/2kabhishek/tmux-tilit) for a simpler `<C-t>` binding and overall smoother experience
+
+#### tmuxinator integration
+
+If you have a `.tmuxinator.yml` file in your directory, tea will use it for setting up your session.
+
+If you have a tmuxinator config file in `~/.config/tmuxinator/` that has the same name as your tmux session directory then that will be used.
+
+If none of these are present a tmux session is created from scratch.
+
+#### zsh integration
+
+If you use zsh you can add the `<C-t>` binding outside tmux as well using this sni[[ed]]
+
 ```bash
-USAGE:
-    tmux-tea [FLAGS] [OPTIONS]
-Example:
-    tmux-tea
+bindkey -s '^T' ' t^M ^M'
 ```
 
-## What's Next
-
-Planning to add `<feature/module>`.
-
-### ✅ To-Do
-
-- [x] Setup repo
-- [ ] Think real hard
-- [ ] Start typing
-
-##  Behind The Code
+## Behind The Code
 
 ### 🌈 Inspiration
 
-tmux-tea was inspired by `<reason/idea>`.
+tmux-tea was inspired by [t-smart-tmux-session-manager](https://github.com/joshmedeski/t-smart-tmux-session-manager) and shares a lot of code.
+
+I wanted to add some more features that diverged from the original repo and wanted to keep the configs simpler.
 
 ### 💡 Challenges/Learnings
 
-- The main challenges were `<issue/difficulty>`
-- I learned about `<learning/accomplishment>`
+-   Figuring out the preview script was quite tricky.
+-   Bash shenanigans!
 
 ### 🧰 Tooling
 
-- [dots2k](https://github.com/2kabhishek/dots2k) — Dev Environment
-- [nvim2k](https://github.com/2kabhishek/nvim2k) — Personalized Editor
+-   [dots2k](https://github.com/2kabhishek/dots2k) — Dev Environment
+-   [nvim2k](https://github.com/2kabhishek/nvim2k) — Personalized Editor
+-   [sway2k](https://github.com/2kabhishek/sway2k) — Desktop Environment
+-   [qute2k](https://github.com/2kabhishek/qute2k) — Personalized Browser
 
 ### 🔍 More Info
 
-- [similar](https://github.com/2kabhishek/similar) — a related repo
+-   [tmux-tilit](https://github.com/2kabhishek/tmux-tilit) — Turns tmux into a terminal window manager
+-   [tmux2k](https://github.com/2kabhishek/tmux2k) — Makes your tmux statusbar pretty!
 
 <hr>
 
@@ -112,4 +121,3 @@ tmux-tea was inspired by `<reason/idea>`.
 | <a href="https://2kabhishek.github.io/projects" target="_blank">Other Projects </a>
 
 </div>
-
