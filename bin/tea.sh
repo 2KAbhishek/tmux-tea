@@ -138,7 +138,9 @@ case $T_RUNTYPE in
 attached)
     tmux switch-client -t "$SESSION"
     ;;
-detached) ;&
+detached)
+    tmux attach -t "$SESSION"
+    ;;
 serverless)
     tmux attach -t "$SESSION"
     ;;
