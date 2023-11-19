@@ -135,13 +135,6 @@ if [ "$SESSION" = "" ]; then
 fi
 
 case $T_RUNTYPE in
-attached)
-    tmux switch-client -t "$SESSION"
-    ;;
-detached)
-    tmux attach -t "$SESSION"
-    ;;
-serverless)
-    tmux attach -t "$SESSION"
-    ;;
+attached) tmux switch-client -t "$SESSION" ;;
+detached | serverless) tmux attach -t "$SESSION" ;;
 esac
