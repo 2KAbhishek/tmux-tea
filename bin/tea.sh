@@ -16,7 +16,9 @@ FIND_BIND="ctrl-f:change-prompt(  )+reload(fd -H -d 2 -t d . ~)"
 TAB_BIND="tab:down,btab:up"
 PROMPT='  '
 MARKER=''
-PREVIEW="tmux list-panes -t {} -aF '#S-  #I:#W:#P   #T #{window_active}:#{pane_active}' | grep {}- | cut -d ' ' -f 2-"
+
+PREVIEW="tmux capture-pane -ep -t {} && echo ----------------------------------------------------------------- \
+&& tmux list-panes -t {} -aF '#S-  #I:#W:#P   #T #{window_active}:#{pane_active}' | grep {}- | cut -d ' ' -f 2-"
 
 # determine if the tmux server is running
 if tmux list-sessions &>/dev/null; then
@@ -81,7 +83,7 @@ else
                 --bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" \
                 --bind "$ZOXIDE_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
                 --no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW" \
-                "$FZF_TMUX_OPTS"
+                --preview-window=top,75% "$FZF_TMUX_OPTS"
         )
         ;;
     detached)
@@ -89,7 +91,8 @@ else
             (get_fzf_results) | fzf \
                 --bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" \
                 --bind "$ZOXIDE_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
-                --no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW"
+                --no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW" \
+                --preview-window=top,75%
         )
         ;;
     serverless)
