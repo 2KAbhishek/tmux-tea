@@ -9,16 +9,18 @@ if [ $HOME_SED_SAFE -eq 0 ]; then
 fi
 
 BORDER_LABEL='   tmux-tea   '
-HEADER=" ^s sessions ^x zoxide ^f find"
+HEADER="^s  | ^z ⚡| ^f   | ^w   | ^t 󱘎  |^x "
+PREVIEW_CMD="tmux capture-pane -ep -t"
 SESSION_BIND="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')"
-ZOXIDE_BIND="ctrl-x:change-prompt(  )+reload(zoxide query -l | sed -e \"$HOME_REPLACER\")"
+ZOXIDE_BIND="ctrl-z:change-prompt(  )+reload(zoxide query -l | sed -e \"$HOME_REPLACER\")"
 FIND_BIND="ctrl-f:change-prompt(  )+reload(fd -H -d 2 -t d . ~)"
+WINDOW_BIND="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($PREVIEW_CMD {})"
+KILL_BIND="ctrl-x:change-prompt(  )execute-silent(tmux kill-session -t {})+reload(tmux list-sessions -F '#S')"
+TREE_BIND="ctrl-t:change-preview(tmux list-panes -t {} -aF '#S-  #I:#W:#P   #T #{window_active}:#{pane_active}' | grep {}- | cut -d ' ' -f 2-)"
 TAB_BIND="tab:down,btab:up"
 PROMPT='  '
 MARKER=''
-
-PREVIEW="tmux capture-pane -ep -t {} && echo ----------------------------------------------------------------- \
-&& tmux list-panes -t {} -aF '#S-  #I:#W:#P   #T #{window_active}:#{pane_active}' | grep {}- | cut -d ' ' -f 2-"
+PREVIEW="$PREVIEW_CMD {}"
 
 # determine if the tmux server is running
 if tmux list-sessions &>/dev/null; then
@@ -80,8 +82,8 @@ else
     attached)
         RESULT=$(
             (get_fzf_results) | fzf-tmux \
-                --bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" \
-                --bind "$ZOXIDE_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
+                --bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" --bind "$WINDOW_BIND" --bind "$TREE_BIND" \
+                --bind "$ZOXIDE_BIND" --bind "$KILL_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
                 --no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW" \
                 --preview-window=top,75% "$FZF_TMUX_OPTS"
         )
@@ -89,8 +91,8 @@ else
     detached)
         RESULT=$(
             (get_fzf_results) | fzf \
-                --bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" \
-                --bind "$ZOXIDE_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
+                --bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" --bind "$WINDOW_BIND" --bind "$TREE_BIND" \
+                --bind "$ZOXIDE_BIND" --bind "$KILL_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
                 --no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW" \
                 --preview-window=top,75%
         )
@@ -98,7 +100,7 @@ else
     serverless)
         RESULT=$(
             (get_fzf_results) | fzf \
-                --bind "$FIND_BIND" --bind "$TAB_BIND" --bind "$ZOXIDE_BIND" \
+                --bind "$FIND_BIND" --bind "$TAB_BIND" --bind "$ZOXIDE_BIND" --bind "$KILL_BIND" --bind "$TREE_BIND" \
                 --border-label "$BORDER_LABEL" --header "$HEADER" --no-sort \
                 --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW"
         )
