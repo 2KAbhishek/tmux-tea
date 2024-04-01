@@ -8,19 +8,20 @@ if [ $HOME_SED_SAFE -eq 0 ]; then
     HOME_REPLACER="s|^$HOME/|~/|"
 fi
 
-BORDER_LABEL='   tmux-tea   '
-HEADER="^s  | ^z ⚡| ^f   | ^w   | ^t 󱘎  |^x "
-PREVIEW_CMD="tmux capture-pane -ep -t"
-SESSION_BIND="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')"
-ZOXIDE_BIND="ctrl-z:change-prompt(  )+reload(zoxide query -l | sed -e \"$HOME_REPLACER\")"
-FIND_BIND="ctrl-f:change-prompt(  )+reload(fd -H -d 2 -t d . ~)"
-WINDOW_BIND="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($PREVIEW_CMD {})"
-KILL_BIND="ctrl-x:change-prompt(  )execute-silent(tmux kill-session -t {})+reload(tmux list-sessions -F '#S')"
-TREE_BIND="ctrl-t:change-preview(tmux list-panes -t {} -aF '#S-  #I:#W:#P   #T #{window_active}:#{pane_active}' | grep {}- | cut -d ' ' -f 2-)"
-TAB_BIND="tab:down,btab:up"
 PROMPT='  '
 MARKER=''
-PREVIEW="$PREVIEW_CMD {}"
+BORDER_LABEL='   tmux-tea   '
+HEADER="^s   ^j   ^f   ^w   ^t   ^x "
+SESSION_PREVIEW_CMD="tmux capture-pane -ep -t"
+DIR_PREVIEW_CMD="eza -ahlT -L=2 -s=extension --group-directories-first --icons --git --git-ignore"
+PREVIEW="$SESSION_PREVIEW_CMD {} || $DIR_PREVIEW_CMD {}"
+TAB_BIND="tab:down,btab:up"
+SESSION_BIND="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')"
+ZOXIDE_BIND="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$HOME_REPLACER\")+change-preview(zoxide query -l {} | $DIR_PREVIEW_CMD {})"
+FIND_BIND="ctrl-f:change-prompt(  )+reload(fd -H -d 2 -t d . ~)+change-preview($DIR_PREVIEW_CMD {})"
+WINDOW_BIND="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($SESSION_PREVIEW_CMD {})"
+KILL_BIND="ctrl-x:change-prompt(  )+execute-silent(tmux kill-session -t {})+reload(tmux list-sessions -F '#S')"
+TREE_BIND="ctrl-t:change-prompt(  )+change-preview(tmux list-panes -t {} -aF '#S-  #I:#W:#P   #T #{window_active}:#{pane_active}' | grep {}- | cut -d ' ' -f 2-)"
 
 # determine if the tmux server is running
 if tmux list-sessions &>/dev/null; then
@@ -101,8 +102,8 @@ else
         RESULT=$(
             (get_fzf_results) | fzf \
                 --bind "$FIND_BIND" --bind "$TAB_BIND" --bind "$ZOXIDE_BIND" --bind "$KILL_BIND" --bind "$TREE_BIND" \
-                --border-label "$BORDER_LABEL" --header "$HEADER" --no-sort \
-                --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW"
+                --border-label "$BORDER_LABEL" --header "$HEADER" --no-sort --prompt "$PROMPT" --marker "$MARKER" \
+                --preview "$DIR_PREVIEW_CMD {}"
         )
         ;;
     esac
