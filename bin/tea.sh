@@ -15,7 +15,7 @@ PREVIEW="$SESSION_PREVIEW_CMD {} 2&>/dev/null || eval $DIR_PREVIEW_CMD {}"
 PROMPT='  '
 MARKER=''
 BORDER_LABEL='   tmux-tea   '
-HEADER="^s   ^j   ^f   ^w   ^x "
+HEADER="^f   ^j   ^s   ^w   ^x "
 
 T_BIND="ctrl-t:abort"
 TAB_BIND="tab:down,btab:up"
