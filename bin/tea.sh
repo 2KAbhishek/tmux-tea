@@ -15,6 +15,7 @@ HEADER="^s   ^j   ^f   ^w   ^t   ^x "
 SESSION_PREVIEW_CMD="tmux capture-pane -ep -t"
 DIR_PREVIEW_CMD="eza -ahlT -L=2 -s=extension --group-directories-first --icons --git --git-ignore"
 PREVIEW="$SESSION_PREVIEW_CMD {} || $DIR_PREVIEW_CMD {}"
+T_BIND="ctrl-t:abort"
 TAB_BIND="tab:down,btab:up"
 SESSION_BIND="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')"
 ZOXIDE_BIND="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$HOME_REPLACER\")+change-preview(zoxide query -l {} | $DIR_PREVIEW_CMD {})"
@@ -83,7 +84,7 @@ else
     attached)
         RESULT=$(
             (get_fzf_results) | fzf-tmux \
-                --bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" --bind "$WINDOW_BIND" --bind "$TREE_BIND" \
+                --bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" --bind "$WINDOW_BIND" --bind "$T_BIND" \
                 --bind "$ZOXIDE_BIND" --bind "$KILL_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
                 --no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW" \
                 --preview-window=top,75% "$FZF_TMUX_OPTS"
@@ -92,7 +93,7 @@ else
     detached)
         RESULT=$(
             (get_fzf_results) | fzf \
-                --bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" --bind "$WINDOW_BIND" --bind "$TREE_BIND" \
+                --bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" --bind "$WINDOW_BIND" --bind "$T_BIND" \
                 --bind "$ZOXIDE_BIND" --bind "$KILL_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
                 --no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW" \
                 --preview-window=top,75%
@@ -101,7 +102,7 @@ else
     serverless)
         RESULT=$(
             (get_fzf_results) | fzf \
-                --bind "$FIND_BIND" --bind "$TAB_BIND" --bind "$ZOXIDE_BIND" --bind "$KILL_BIND" --bind "$TREE_BIND" \
+                --bind "$FIND_BIND" --bind "$TAB_BIND" --bind "$ZOXIDE_BIND" --bind "$KILL_BIND" --bind "$T_BIND" \
                 --border-label "$BORDER_LABEL" --header "$HEADER" --no-sort --prompt "$PROMPT" --marker "$MARKER" \
                 --preview "$DIR_PREVIEW_CMD {}"
         )
