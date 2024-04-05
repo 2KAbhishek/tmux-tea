@@ -24,7 +24,6 @@ ZOXIDE_BIND="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$H
 FIND_BIND="ctrl-f:change-prompt(  )+reload(fd -H -d 2 -t d . ~)+change-preview($DIR_PREVIEW_CMD {})"
 WINDOW_BIND="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($SESSION_PREVIEW_CMD {})"
 KILL_BIND="ctrl-x:change-prompt(  )+execute-silent(tmux kill-session -t {})+reload(tmux list-sessions -F '#S')"
-TREE_BIND="ctrl-t:change-prompt(  )+change-preview(tmux list-panes -t {} -aF '#S-  #I:#W:#P   #T #{window_active}:#{pane_active}' | grep {}- | cut -d ' ' -f 2-)"
 
 # determine if the tmux server is running
 if tmux list-sessions &>/dev/null; then
