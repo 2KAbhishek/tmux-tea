@@ -8,13 +8,15 @@ if [ $HOME_SED_SAFE -eq 0 ]; then
     HOME_REPLACER="s|^$HOME/|~/|"
 fi
 
+SESSION_PREVIEW_CMD="tmux capture-pane -ep -t"
+DIR_PREVIEW_CMD="eza -ahlT -L=2 -s=extension --group-directories-first --icons --git --git-ignore --no-user --color=always --color-scale=all --color-scale-mode=gradient"
+PREVIEW="$SESSION_PREVIEW_CMD {} 2&>/dev/null || eval $DIR_PREVIEW_CMD {}"
+
 PROMPT='  '
 MARKER=''
 BORDER_LABEL='   tmux-tea   '
-HEADER="^s   ^j   ^f   ^w   ^t   ^x "
-SESSION_PREVIEW_CMD="tmux capture-pane -ep -t"
-DIR_PREVIEW_CMD="eza -ahlT -L=2 -s=extension --group-directories-first --icons --git --git-ignore"
-PREVIEW="$SESSION_PREVIEW_CMD {} || $DIR_PREVIEW_CMD {}"
+HEADER="^s   ^j   ^f   ^w   ^x "
+
 T_BIND="ctrl-t:abort"
 TAB_BIND="tab:down,btab:up"
 SESSION_BIND="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')"
