@@ -23,7 +23,7 @@
 <h3>tmux sessions as easy as tea ☕🪟</h3>
 
 <figure>
-  <img src="images/screenshot.jpg" alt="tmux-tea in action">
+  <img src="images/screenshot.png" alt="tmux-tea in action">
   <br/>
   <figcaption>tmux-tea in action</figcaption>
 </figure>
@@ -45,7 +45,8 @@ It's a one key solution to all your tmux session needs.
 ### ⚡ Requirements
 
 -   tmux, fzf, zoxide (required)
--   tmuxinator (recommended)
+-   tmuxinator (for session layouts)
+-   eza (for directory previews)
 
 ### 🚀 Installation
 
@@ -64,8 +65,17 @@ ln -sfnv $PWD/bin/tea.sh  ~/.local/bin/t # Add t to $PATH
 
 There are two ways to open tea
 
-- `<prefix> + t`, this can be configured with the `@tea-bind` option
-- `<C-t>` alternate binding for a smoother experience.
+- `<prefix> - t`, this can be configured with the `@tea-bind` option
+- <kbd>Ctrl</kbd>+<kbd>t</kbd> alternate binding for a smoother experience.
+
+#### Keybindings
+
+- <kbd>Ctrl</kbd>+<kbd>f</kbd> - Directory mode
+- <kbd>Ctrl</kbd>+<kbd>j</kbd> - Zoxide mode
+- <kbd>Ctrl</kbd>+<kbd>s</kbd> - Session mode
+- <kbd>Ctrl</kbd>+<kbd>w</kbd> - Window mode
+- <kbd>Ctrl</kbd>+<kbd>x</kbd> - Kill mode
+- <kbd>Ctrl</kbd>+<kbd>t</kbd> - Toggle tea
 
 #### tmuxinator integration
 
