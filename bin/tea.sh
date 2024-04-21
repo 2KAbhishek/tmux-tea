@@ -66,15 +66,13 @@ get_fzf_results() {
 
 # if started with single argument
 if [ $# -eq 1 ]; then
-    zoxide query "$1" &>/dev/null
-    ZOXIDE_RESULT_EXIT_CODE=$?
-    if [ $ZOXIDE_RESULT_EXIT_CODE -eq 0 ]; then
-        RESULT=$(zoxide query "$1")
+    if [ -d "$1" ]; then
+        RESULT=$1
     else
-        ls "$1" &>/dev/null
-        LS_EXIT_CODE=$?
-        if [ $LS_EXIT_CODE -eq 0 ]; then
-            RESULT=$1
+        zoxide query "$1" &>/dev/null
+        ZOXIDE_RESULT_EXIT_CODE=$?
+        if [ $ZOXIDE_RESULT_EXIT_CODE -eq 0 ]; then
+            RESULT=$(zoxide query "$1")
         else
             echo "No directory found."
             exit 1
