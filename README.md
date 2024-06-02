@@ -93,6 +93,14 @@ If you use zsh you can add the `<C-t>` binding outside tmux as well using this s
 bindkey -s '^T' ' t^M ^M'
 ```
 
+#### Configuration
+
+You can set the session name to be the full path you select instead of the directory using:
+
+```tmux
+set -g @tea-session-name "full-path"
+```
+
 ## Behind The Code
 
 ### 🌈 Inspiration
