@@ -124,7 +124,7 @@ if [[ $RESULT != /* ]]; then # not a dir path
 else
     SESSION_NAME_OPTION=$(tmux show-option -gqv "@tea-session-name")
     if [ "$SESSION_NAME_OPTION" = "full-path" ]; then
-        SESSION_NAME="$RESULT"
+        SESSION_NAME="${RESULT/$HOME/\~}"
     else
         SESSION_NAME=$(basename "$RESULT")
     fi
