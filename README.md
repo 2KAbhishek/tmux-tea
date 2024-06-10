@@ -58,7 +58,7 @@ set -g @plugin '2kabhishek/tmux-tea'
 
 ```bash
 cd ~/.tmux/plugins/tmux-tea # replace ~/.tmux/plugins with your plugin installation path
-ln -sfnv $PWD/bin/tea.sh  ~/.local/bin/t # Add t to $PATH
+ln -sfnv $PWD/bin/tea.sh  ~/.local/bin/tea # Add tea to $PATH, make sure ~/.local/bin is in your $PATH
 ```
 
 ### 💻 Usage
@@ -90,7 +90,7 @@ If none of these are present a tmux session is created from scratch.
 If you use zsh you can add the `<C-t>` binding outside tmux as well using this sni[[ed]]
 
 ```bash
-bindkey -s '^T' ' t^M ^M'
+bindkey -s '^T' ' tea^M ^M'
 ```
 
 #### full session names
