@@ -2,6 +2,7 @@
 
 # home path fix for sed
 HOME_REPLACER=""
+FZF_TMUX_OPTIONS=${FZF_TMUX_OPTS:-"-p 90%"}
 echo "$HOME" | grep -E "^[a-zA-Z0-9\-_/.@]+$" &>/dev/null
 HOME_SED_SAFE=$?
 if [ $HOME_SED_SAFE -eq 0 ]; then
@@ -86,7 +87,7 @@ else
                 --bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" --bind "$WINDOW_BIND" --bind "$T_BIND" \
                 --bind "$ZOXIDE_BIND" --bind "$KILL_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
                 --no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW" \
-                --preview-window=top,75% "$FZF_TMUX_OPTS"
+                --preview-window=top,75% $FZF_TMUX_OPTIONS
         )
         ;;
     detached)
@@ -131,7 +132,7 @@ else
     SESSION_NAME=$(echo "$SESSION_NAME" | tr ' .:' '_')
 fi
 
-if [ "$T_RUNTYPE" = "serverless" ] || ! tmux has-session -t="$SESSION_NAME" &> /dev/null ; then
+if [ "$T_RUNTYPE" = "serverless" ] || ! tmux has-session -t="$SESSION_NAME" &>/dev/null; then
     if [ -e "$RESULT"/.tmuxinator.yml ] && command -v tmuxinator &>/dev/null; then
         cd "$RESULT" && tmuxinator local
     elif [ -e "$HOME/.config/tmuxinator/$SESSION_NAME.yml" ] && command -v tmuxinator &>/dev/null; then
