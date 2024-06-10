@@ -122,25 +122,26 @@ zoxide add "$RESULT" &>/dev/null
 if [[ $RESULT != /* ]]; then # not a dir path
     SESSION_NAME=$RESULT
 else
-    SESSION_NAME=$(basename "$RESULT" | tr ' .:' '_')
+    SESSION_NAME_OPTION=$(tmux show-option -gqv "@tea-session-name")
+    if [ "$SESSION_NAME_OPTION" = "full-path" ]; then
+        SESSION_NAME="${RESULT/$HOME/\~}"
+    else
+        SESSION_NAME=$(basename "$RESULT")
+    fi
+    SESSION_NAME=$(echo "$SESSION_NAME" | tr ' .:' '_')
 fi
 
-if [ "$T_RUNTYPE" != "serverless" ]; then
-    SESSION=$(tmux list-sessions -F '#S' | grep "^$SESSION_NAME$")
-fi
-
-if [ "$SESSION" = "" ]; then
-    SESSION="$SESSION_NAME"
+if [ "$T_RUNTYPE" = "serverless" ] || ! tmux has-session -t="$SESSION_NAME" &> /dev/null ; then
     if [ -e "$RESULT"/.tmuxinator.yml ] && command -v tmuxinator &>/dev/null; then
         cd "$RESULT" && tmuxinator local
-    elif [ -e "$HOME/.config/tmuxinator/$SESSION.yml" ] && command -v tmuxinator &>/dev/null; then
-        tmuxinator "$SESSION"
+    elif [ -e "$HOME/.config/tmuxinator/$SESSION_NAME.yml" ] && command -v tmuxinator &>/dev/null; then
+        tmuxinator "$SESSION_NAME"
     else
-        tmux new-session -d -s "$SESSION" -c "$RESULT"
+        tmux new-session -d -s "$SESSION_NAME" -c "$RESULT"
     fi
 fi
 
 case $T_RUNTYPE in
-attached) tmux switch-client -t "$SESSION" ;;
-detached | serverless) tmux attach -t "$SESSION" ;;
+attached) tmux switch-client -t "$SESSION_NAME" ;;
+detached | serverless) tmux attach -t "$SESSION_NAME" ;;
 esac
