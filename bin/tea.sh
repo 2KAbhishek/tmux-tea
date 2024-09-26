@@ -1,47 +1,34 @@
 #!/usr/bin/env bash
 
 # home path fix for sed
-HOME_REPLACER=""
-FZF_TMUX_OPTIONS=${FZF_TMUX_OPTS:-"-p 90%"}
-echo "$HOME" | grep -E "^[a-zA-Z0-9\-_/.@]+$" &>/dev/null
-HOME_SED_SAFE=$?
-if [ $HOME_SED_SAFE -eq 0 ]; then
-    HOME_REPLACER="s|^$HOME/|~/|"
-fi
+home_replacer=""
+fzf_tmux_options=${FZF_TMUX_OPTS:-"-p 90%"}
+[[ "$HOME" =~ ^[a-zA-Z0-9\-_/.@]+$ ]] && home_replacer="s|^$HOME/|~/|"
 
-SESSION_PREVIEW_CMD="tmux capture-pane -ep -t"
-DIR_PREVIEW_CMD="eza -ahlT -L=2 -s=extension --group-directories-first --icons --git --git-ignore --no-user --color=always --color-scale=all --color-scale-mode=gradient"
-PREVIEW="$SESSION_PREVIEW_CMD {} 2&>/dev/null || eval $DIR_PREVIEW_CMD {}"
+session_preview_cmd="tmux capture-pane -ep -t"
+dir_preview_cmd="eza -ahlT -L=2 -s=extension --group-directories-first --icons --git --git-ignore --no-user --color=always --color-scale=all --color-scale-mode=gradient"
+preview="$session_preview_cmd {} 2&>/dev/null || eval $dir_preview_cmd {}"
 
-PROMPT='  '
-MARKER=''
-BORDER_LABEL='   tmux-tea   '
-HEADER="^f   ^j   ^s   ^w   ^x "
+prompt='  '
+marker=''
+border_label='   tmux-tea   '
+header="^f   ^j   ^s   ^w   ^x "
 
-T_BIND="ctrl-t:abort"
-TAB_BIND="tab:down,btab:up"
-SESSION_BIND="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')+change-preview-window(top,85%)"
-ZOXIDE_BIND="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$HOME_REPLACER\")+change-preview(eval $DIR_PREVIEW_CMD {})+change-preview-window(right)"
-FIND_BIND="ctrl-f:change-prompt(  )+reload(fd -H -d 2 -t d . ~)+change-preview($DIR_PREVIEW_CMD {})+change-preview-window(right)"
-WINDOW_BIND="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($SESSION_PREVIEW_CMD {})+change-preview-window(top)"
-KILL_BIND="ctrl-x:change-prompt(  )+execute-silent(tmux kill-session -t {})+reload-sync(tmux list-sessions -F '#S' && zoxide query -l | sed -e \"$HOME_REPLACER\")"
+t_bind="ctrl-t:abort"
+tab_bind="tab:down,btab:up"
+session_bind="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')+change-preview-window(top,85%)"
+zoxide_bind="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$home_replacer\")+change-preview(eval $dir_preview_cmd {})+change-preview-window(right)"
+find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d 2 -t d . ~)+change-preview($dir_preview_cmd {})+change-preview-window(right)"
+window_bind="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($session_preview_cmd {})+change-preview-window(top)"
+kill_bind="ctrl-x:change-prompt(  )+execute-silent(tmux kill-session -t {})+reload-sync(tmux list-sessions -F '#S' && zoxide query -l | sed -e \"$home_replacer\")"
 
 # determine if the tmux server is running
-if tmux list-sessions &>/dev/null; then
-    TMUX_RUNNING=0
-else
-    TMUX_RUNNING=1
-fi
+tmux_running=1
+tmux list-sessions &>/dev/null && tmux_running=0
 
 # determine the user's current position relative tmux:
-T_RUNTYPE="serverless"
-if [ "$TMUX_RUNNING" -eq 0 ]; then
-    if [ "$TMUX" ]; then
-        T_RUNTYPE="attached"
-    else
-        T_RUNTYPE="detached"
-    fi
-fi
+run_type="serverless"
+[[ "$tmux_running" -eq 0 ]] && run_type=$([[ "$TMUX" ]] && echo "attached" || echo "detached")
 
 get_sessions_by_last_used() {
     tmux list-sessions -F '#{session_last_attached} #{session_name}' |
@@ -49,100 +36,86 @@ get_sessions_by_last_used() {
 }
 
 get_zoxide_results() {
-    zoxide query -l | sed -e "$HOME_REPLACER"
+    zoxide query -l | sed -e "$home_replacer"
 }
 
 get_fzf_results() {
-    if [ "$TMUX_RUNNING" -eq 0 ]; then
-        SESSIONS=$(get_sessions_by_last_used)
-        if [ "$SESSIONS" != "" ]; then
-            echo "$SESSIONS" && get_zoxide_results
-        else
-            get_zoxide_results
-        fi
+    if [[ "$tmux_running" -eq 0 ]]; then
+        sessions=$(get_sessions_by_last_used)
+        [[ "$sessions" ]] && echo "$sessions" && get_zoxide_results || get_zoxide_results
     else
         get_zoxide_results
     fi
 }
 
 # if started with single argument
-if [ $# -eq 1 ]; then
-    if [ -d "$1" ]; then
-        RESULT=$1
+if [[ $# -eq 1 ]]; then
+    if [[ -d "$1" ]]; then
+        result=$1
     else
         zoxide query "$1" &>/dev/null
-        ZOXIDE_RESULT_EXIT_CODE=$?
-        if [ $ZOXIDE_RESULT_EXIT_CODE -eq 0 ]; then
-            RESULT=$(zoxide query "$1")
+        zoxide_result_exit_code=$?
+        if [[ $zoxide_result_exit_code -eq 0 ]]; then
+            result=$(zoxide query "$1")
         else
             echo "No directory found."
             exit 1
         fi
     fi
 else
-    case $T_RUNTYPE in
+    case $run_type in
     attached)
-        RESULT=$(
-            (get_fzf_results) | fzf-tmux \
-                --bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" --bind "$WINDOW_BIND" --bind "$T_BIND" \
-                --bind "$ZOXIDE_BIND" --bind "$KILL_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
-                --no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW" \
-                --preview-window=top,75% $FZF_TMUX_OPTIONS
-        )
+        result=$(get_fzf_results | fzf-tmux \
+            --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$t_bind" \
+            --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$border_label" --header "$header" \
+            --no-sort --prompt "$prompt" --marker "$marker" --preview "$preview" \
+            --preview-window=top,75% $fzf_tmux_options)
         ;;
     detached)
-        RESULT=$(
-            (get_fzf_results) | fzf \
-                --bind "$FIND_BIND" --bind "$SESSION_BIND" --bind "$TAB_BIND" --bind "$WINDOW_BIND" --bind "$T_BIND" \
-                --bind "$ZOXIDE_BIND" --bind "$KILL_BIND" --border-label "$BORDER_LABEL" --header "$HEADER" \
-                --no-sort --prompt "$PROMPT" --marker "$MARKER" --preview "$PREVIEW" \
-                --preview-window=top,75%
-        )
+        result=$(get_fzf_results | fzf \
+            --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$t_bind" \
+            --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$border_label" --header "$header" \
+            --no-sort --prompt "$prompt" --marker "$marker" --preview "$preview" \
+            --preview-window=top,75%)
         ;;
     serverless)
-        RESULT=$(
-            (get_fzf_results) | fzf \
-                --bind "$FIND_BIND" --bind "$TAB_BIND" --bind "$ZOXIDE_BIND" --bind "$KILL_BIND" --bind "$T_BIND" \
-                --border-label "$BORDER_LABEL" --header "$HEADER" --no-sort --prompt "$PROMPT" --marker "$MARKER" \
-                --preview "$DIR_PREVIEW_CMD {}"
-        )
+        result=$(get_fzf_results | fzf \
+            --bind "$find_bind" --bind "$tab_bind" --bind "$zoxide_bind" --bind "$kill_bind" --bind "$t_bind" \
+            --border-label "$border_label" --header "$header" --no-sort --prompt "$prompt" --marker "$marker" \
+            --preview "$dir_preview_cmd {}")
         ;;
     esac
 fi
 
-if [ "$RESULT" = "" ]; then
-    exit 0
-fi
+[[ "$result" ]] || exit 0
 
-if [ $HOME_SED_SAFE -eq 0 ]; then
-    RESULT=$(echo "$RESULT" | sed -e "s|^~/|$HOME/|")
-fi
+[[ $home_replacer ]] && result=$(echo "$result" | sed -e "s|^~/|$HOME/|")
 
-zoxide add "$RESULT" &>/dev/null
+zoxide add "$result" &>/dev/null
 
-if [[ $RESULT != /* ]]; then # not a dir path
-    SESSION_NAME=$RESULT
+if [[ $result != /* ]]; then # not a dir path
+    session_name=$result
 else
-    SESSION_NAME_OPTION=$(tmux show-option -gqv "@tea-session-name")
-    if [ "$SESSION_NAME_OPTION" = "full-path" ]; then
-        SESSION_NAME="${RESULT/$HOME/\~}"
+    session_name_option=$(tmux show-option -gqv "@tea-session-name")
+    if [[ "$session_name_option" = "full-path" ]]; then
+        session_name="${result/$HOME/\~}"
     else
-        SESSION_NAME=$(basename "$RESULT")
+        session_name=$(basename "$result")
     fi
-    SESSION_NAME=$(echo "$SESSION_NAME" | tr ' .:' '_')
+    session_name=$(echo "$session_name" | tr ' .:' '_')
 fi
 
-if [ "$T_RUNTYPE" = "serverless" ] || ! tmux has-session -t="$SESSION_NAME" &>/dev/null; then
-    if [ -e "$RESULT"/.tmuxinator.yml ] && command -v tmuxinator &>/dev/null; then
-        cd "$RESULT" && tmuxinator local
-    elif [ -e "$HOME/.config/tmuxinator/$SESSION_NAME.yml" ] && command -v tmuxinator &>/dev/null; then
-        tmuxinator "$SESSION_NAME"
+if [[ "$run_type" = "serverless" ]] || ! tmux has-session -t="$session_name" &>/dev/null; then
+    if [[ -e "$result"/.tmuxinator.yml ]] && command -v tmuxinator &>/dev/null; then
+        cd "$result" && tmuxinator local
+    elif [[ -e "$HOME/.config/tmuxinator/$session_name.yml" ]] && command -v tmuxinator &>/dev/null; then
+        tmuxinator "$session_name"
     else
-        tmux new-session -d -s "$SESSION_NAME" -c "$RESULT"
+        tmux new-session -d -s "$session_name" -c "$result"
     fi
 fi
 
-case $T_RUNTYPE in
-attached) tmux switch-client -t "$SESSION_NAME" ;;
-detached | serverless) tmux attach -t "$SESSION_NAME" ;;
+case $run_type in
+attached) tmux switch-client -t "$session_name" ;;
+detached | serverless) tmux attach -t "$session_name" ;;
 esac
