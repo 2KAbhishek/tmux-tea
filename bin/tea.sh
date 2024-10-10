@@ -111,7 +111,12 @@ if [[ "$run_type" = "serverless" ]] || ! tmux has-session -t="$session_name" &>/
     elif [[ -e "$HOME/.config/tmuxinator/$session_name.yml" ]] && command -v tmuxinator &>/dev/null; then
         tmuxinator "$session_name"
     else
-        tmux new-session -d -s "$session_name" -c "$result"
+        default_cmd=$(tmux show-option -gqv "@tea-default-command")
+        if [[ -n "$default_cmd" ]]; then
+            tmux new-session -d -s "$session_name" -c "$result" "$default_cmd"
+        else
+            tmux new-session -d -s "$session_name" -c "$result"
+        fi
     fi
 fi
 
