@@ -35,18 +35,18 @@ It's a one key solution to all your tmux session needs.
 
 ## ✨ Features
 
--   Integrations with tmuxinator for session specific configs
--   Integrations with fzf for fuzzy search
--   Supports session previews
--   Integrations with zoxide for directory based session creation
+- Integrations with tmuxinator for session specific configs
+- Integrations with fzf for fuzzy search
+- Supports session previews
+- Integrations with zoxide for directory based session creation
 
 ## Setup
 
 ### ⚡ Requirements
 
--   tmux, fzf, zoxide (required)
--   tmuxinator (for session layouts)
--   eza (for directory previews)
+- tmux, fzf, zoxide (required)
+- tmuxinator (for session layouts)
+- eza (for directory previews)
 
 ### 🚀 Installation
 
@@ -85,6 +85,16 @@ If you have a tmuxinator config file in `~/.config/tmuxinator/` that has the sam
 
 If none of these are present a tmux session is created from scratch.
 
+#### default command
+
+If there is no tmuxinator config present, you can set a default command to run in the session using:
+
+```tmux
+set -g @tea-default-command "$EDITOR"
+```
+
+This will open every new session after the initial one with your "$EDITOR" command running.
+
 #### zsh integration
 
 If you use zsh you can add the `<C-t>` binding outside tmux as well using this sni[[ed]]
@@ -111,20 +121,20 @@ I wanted to add some more features that diverged from the original repo and want
 
 ### 💡 Challenges/Learnings
 
--   Figuring out the preview script was quite tricky.
--   Bash shenanigans!
+- Figuring out the preview script was quite tricky.
+- Bash shenanigans!
 
 ### 🧰 Tooling
 
--   [dots2k](https://github.com/2kabhishek/dots2k) — Dev Environment
--   [nvim2k](https://github.com/2kabhishek/nvim2k) — Personalized Editor
--   [sway2k](https://github.com/2kabhishek/sway2k) — Desktop Environment
--   [qute2k](https://github.com/2kabhishek/qute2k) — Personalized Browser
+- [dots2k](https://github.com/2kabhishek/dots2k) — Dev Environment
+- [nvim2k](https://github.com/2kabhishek/nvim2k) — Personalized Editor
+- [sway2k](https://github.com/2kabhishek/sway2k) — Desktop Environment
+- [qute2k](https://github.com/2kabhishek/qute2k) — Personalized Browser
 
 ### 🔍 More Info
 
--   [tmux-tilit](https://github.com/2kabhishek/tmux-tilit) — Turns tmux into a terminal window manager
--   [tmux2k](https://github.com/2kabhishek/tmux2k) — Makes your tmux statusbar pretty!
+- [tmux-tilit](https://github.com/2kabhishek/tmux-tilit) — Turns tmux into a terminal window manager
+- [tmux2k](https://github.com/2kabhishek/tmux2k) — Makes your tmux statusbar pretty!
 
 <hr>
 
