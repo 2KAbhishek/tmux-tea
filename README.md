@@ -111,6 +111,14 @@ You can set the session name to be the full path you select instead of the direc
 set -g @tea-session-name "full-path"
 ```
 
+#### preview position
+
+You can set the **preview position** to "top" (default) or "bottom":
+
+```tmux
+set -g @tea-preview-position "bottom"
+```
+
 ## Behind The Code
 
 ### 🌈 Inspiration
