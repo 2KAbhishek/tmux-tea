@@ -11,6 +11,15 @@ if [[ "$preview_position_option" = "bottom" ]]; then
     preview_position="bottom"
 fi
 
+layout_option=$(tmux show-option -gqv "@tea-layout")
+layout="default"
+if [[ "$layout_option" = "reverse" ]]; then
+    layout="reverse"
+fi
+if [[ "$layout_option" = "reverse-list" ]]; then
+    layout="reverse-list"
+fi
+
 session_preview_cmd="tmux capture-pane -ep -t"
 dir_preview_cmd="eza -ahlT -L=2 -s=extension --group-directories-first --icons --git --git-ignore --no-user --color=always --color-scale=all --color-scale-mode=gradient"
 preview="$session_preview_cmd {} 2&>/dev/null || eval $dir_preview_cmd {}"
@@ -75,7 +84,7 @@ else
             --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$t_bind" \
             --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$border_label" --header "$header" \
             --no-sort --prompt "$prompt" --marker "$marker" --preview "$preview" \
-            --preview-window="$preview_position",75% $fzf_tmux_options)
+            --preview-window="$preview_position",75% $fzf_tmux_options --layout="$layout")
         ;;
     detached)
         result=$(get_fzf_results | fzf \
