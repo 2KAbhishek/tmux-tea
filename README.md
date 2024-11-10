@@ -119,6 +119,14 @@ You can set the **preview position** to "top" (default) or "bottom":
 set -g @tea-preview-position "bottom"
 ```
 
+#### input position
+
+You can set the **input position** to "default", "reverse", or "reverse-list":
+
+```tmux
+set -g @tea-layout "reverse"
+```
+
 ## Behind The Code
 
 ### 🌈 Inspiration
