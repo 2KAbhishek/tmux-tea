@@ -113,7 +113,7 @@ set -g @tea-session-name "full-path"
 
 #### preview position
 
-You can set the **preview position** to "top" (default) or "bottom":
+You can set the **preview position** to "top","bottom","left", or "right", default is "top".
 
 ```tmux
 set -g @tea-preview-position "bottom"
@@ -121,7 +121,7 @@ set -g @tea-preview-position "bottom"
 
 #### input position
 
-You can set the **input position** to "default", "reverse", or "reverse-list":
+You can set the **input position** to "default", "reverse" or "reverse-list", default is "reverse".
 
 ```tmux
 set -g @tea-layout "reverse"
