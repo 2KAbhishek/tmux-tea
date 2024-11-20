@@ -13,6 +13,7 @@ tmux_option_or_fallback() {
 
 tmux bind-key "$(tmux_option_or_fallback "@tea-bind" "t")" run-shell "$CURRENT_DIR/bin/tea.sh"
 
-# Open tea on control + t
-tmux bind-key -n C-t run-shell "$CURRENT_DIR/bin/tea.sh"
-
+ALT_KEY_BIND="$(tmux show-option -gqv "@tea-bind-alt")"
+if [ "$ALT_KEY_BIND" != "false" ]; then
+    tmux bind-key -n "$(tmux_option_or_fallback "@tea-bind-alt" "C-t")" run-shell "$CURRENT_DIR/bin/tea.sh"
+fi
