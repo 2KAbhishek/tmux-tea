@@ -66,7 +66,7 @@ ln -sfnv $PWD/bin/tea.sh  ~/.local/bin/tea # Add tea to $PATH, make sure ~/.loca
 There are two ways to open tea
 
 - `<prefix> - t`, this can be configured with the `@tea-bind` option e.g: `set -g @tea-bind "t"`
-- <kbd>Ctrl</kbd>+<kbd>t</kbd> alternate binding for a smoother experience. (this can be configured with the `@tea-bind-alt` option and if set to `"false"` this keybind is ignored)
+- <kbd>Ctrl</kbd>+<kbd>t</kbd> alternate binding, this can be configured with the `@tea-alt-bind` option, set it to `"false"` to disable
 
 #### Keybindings
 
