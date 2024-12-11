@@ -135,6 +135,14 @@ Se to "on" to be able to cycle through the results.
 set -g @tea-results-cycle "on"
 ```
 
+#### change max depth for find files mode
+
+The default depth is "2" and you can change it like this.
+
+```tmux
+set -g @tea-max-depth "3"
+```
+
 ## Behind The Code
 
 ### 🌈 Inspiration
