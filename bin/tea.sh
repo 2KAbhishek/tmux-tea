@@ -87,7 +87,7 @@ else
             --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$t_bind" \
             --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$border_label" --header "$header" \
             --no-sort --prompt "$prompt" --marker "$marker" --preview "$preview" \
-            --preview-window="$preview_position",75% "$fzf_tmux_options" --layout="$layout" "$results_cycle")
+            --preview-window="$preview_position",75% "$fzf_tmux_options" --layout="$layout" $results_cycle)
         ;;
     detached)
         result=$(get_fzf_results | fzf \
