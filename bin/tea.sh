@@ -5,6 +5,12 @@ home_replacer=""
 fzf_tmux_options=${FZF_TMUX_OPTS:-"-p 90%"}
 [[ "$HOME" =~ ^[a-zA-Z0-9\-_/.@]+$ ]] && home_replacer="s|^$HOME/|~/|"
 
+results_cycle_option=$(tmux show-option -gqv "@tea-results-cycle")
+results_cycle=""
+if [[ "$results_cycle_option" = "on" ]]; then
+    results_cycle="--cycle"
+fi
+
 preview_position_option=$(tmux show-option -gqv "@tea-preview-position")
 preview_position="top"
 if [[ "$preview_position_option" = "bottom" ]]; then
@@ -84,7 +90,7 @@ else
             --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$t_bind" \
             --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$border_label" --header "$header" \
             --no-sort --prompt "$prompt" --marker "$marker" --preview "$preview" \
-            --preview-window="$preview_position",75% $fzf_tmux_options --layout="$layout")
+            --preview-window="$preview_position",75% $fzf_tmux_options --layout="$layout" $results_cycle)
         ;;
     detached)
         result=$(get_fzf_results | fzf \
