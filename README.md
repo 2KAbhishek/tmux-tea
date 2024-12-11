@@ -127,6 +127,14 @@ You can set the **input position** to "default", "reverse" or "reverse-list", de
 set -g @tea-layout "reverse"
 ```
 
+#### cycle/wrap results
+
+Se to "true" to be able to cycle through the results. Default is false.
+
+```tmux
+set -g @tea-results-cycle "true"
+```
+
 ## Behind The Code
 
 ### 🌈 Inspiration
