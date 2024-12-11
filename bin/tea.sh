@@ -33,7 +33,7 @@ t_bind="ctrl-t:abort"
 tab_bind="tab:down,btab:up"
 session_bind="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')+change-preview-window($preview_position,85%)"
 zoxide_bind="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$home_replacer\")+change-preview(eval $dir_preview_cmd {})+change-preview-window(right)"
-find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d 2 -t d . ~)+change-preview($dir_preview_cmd {})+change-preview-window(right)"
+find_bind="ctrl-f:change-prompt(  )+reload(fdfind -H -d 2 -t d . ~)+change-preview($dir_preview_cmd {})+change-preview-window(right)"
 window_bind="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($session_preview_cmd {})+change-preview-window($preview_position)"
 kill_bind="ctrl-x:change-prompt(  )+execute-silent(tmux kill-session -t {})+reload-sync(tmux list-sessions -F '#S' && zoxide query -l | sed -e \"$home_replacer\")"
 
