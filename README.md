@@ -129,7 +129,7 @@ set -g @tea-layout "reverse"
 
 #### cycle/wrap results
 
-Se to "true" to be able to cycle through the results. Default is false.
+Set to "true" to be able to cycle through the results, default is false.
 
 ```tmux
 set -g @tea-results-cycle "true"
@@ -137,7 +137,7 @@ set -g @tea-results-cycle "true"
 
 #### change max depth for find files mode
 
-The default depth is "2" and you can change it like this.
+Set the max depth used by the find mode, default depth is "2".
 
 ```tmux
 set -g @tea-max-depth "3"
