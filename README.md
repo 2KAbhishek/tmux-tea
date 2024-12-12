@@ -44,7 +44,7 @@ It's a one key solution to all your tmux session needs.
 
 ### ⚡ Requirements
 
-- tmux, fdfind, fzf, zoxide (required)
+- tmux, fd, fzf, zoxide (required)
 - tmuxinator (for session layouts)
 - eza (for directory previews)
 
