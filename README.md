@@ -135,7 +135,17 @@ Set to "false" to disable cycling through the results, default is "true".
 set -g @tea-results-cycle "false"
 ```
 
-#### change max depth for find files mode
+#### default directory for find mode
+
+Set the default directory used by the find mode, first fallback is `$HOME/Projects`, second fallback is `$HOME`.
+
+```tmux
+set -g @tea-find-path "$HOME/Projects"
+# You can also set it to the parent directory of PWD
+set -g @tea-find-path "$PWD/.."
+```
+
+#### max depth for find mode
 
 Set the max depth used by the find mode, default depth is "2".
 
