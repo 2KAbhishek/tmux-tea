@@ -5,17 +5,14 @@ home_replacer=""
 fzf_tmux_options=${FZF_TMUX_OPTS:-"-p 90%"}
 [[ "$HOME" =~ ^[a-zA-Z0-9\-_/.@]+$ ]] && home_replacer="s|^$HOME/|~/|"
 
-max_depth_option=$(tmux show-option -gqv "@tea-max-depth")
-max_depth="2"
-if [[ "$max_depth_option" != "2" ]]; then
-    max_depth="$max_depth_option"
-fi
-
 results_cycle_option=$(tmux show-option -gqv "@tea-results-cycle")
 results_cycle="--cycle"
 if [[ "$results_cycle_option" != "true" ]]; then
     results_cycle="--cycle"
 fi
+
+max_depth_option=$(tmux show-option -gqv "@tea-max-depth")
+max_depth=${max_depth_option:-"2"}
 
 preview_position_option=$(tmux show-option -gqv "@tea-preview-position")
 preview_position=${preview_position_option:-"top"}
