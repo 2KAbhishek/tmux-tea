@@ -5,12 +5,6 @@ home_replacer=""
 fzf_tmux_options=${FZF_TMUX_OPTS:-"-p 90%"}
 [[ "$HOME" =~ ^[a-zA-Z0-9\-_/.@]+$ ]] && home_replacer="s|^$HOME/|~/|"
 
-results_cycle_option=$(tmux show-option -gqv "@tea-results-cycle")
-results_cycle="--cycle"
-if [[ "$results_cycle_option" != "true" ]]; then
-    results_cycle="--cycle"
-fi
-
 find_path_option=$(tmux show-option -gqv "@tea-find-path")
 find_path=${find_path_option:-"$HOME/Projects"}
 if [[ ! -d "$find_path" ]]; then

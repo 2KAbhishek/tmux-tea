@@ -127,14 +127,6 @@ You can set the **input position** to "default", "reverse" or "reverse-list", de
 set -g @tea-layout "reverse"
 ```
 
-#### cycle/wrap results
-
-Set to "false" to disable cycling through the results, default is "true".
-
-```tmux
-set -g @tea-results-cycle "false"
-```
-
 #### default directory for find mode
 
 Set the default directory used by the find mode, first fallback is `$HOME/Projects`, second fallback is `$HOME`.
