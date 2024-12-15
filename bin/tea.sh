@@ -5,6 +5,18 @@ home_replacer=""
 fzf_tmux_options=${FZF_TMUX_OPTS:-"-p 90%"}
 [[ "$HOME" =~ ^[a-zA-Z0-9\-_/.@]+$ ]] && home_replacer="s|^$HOME/|~/|"
 
+max_depth_option=$(tmux show-option -gqv "@tea-max-depth")
+max_depth="2"
+if [[ "$max_depth_option" != "2" ]]; then
+    max_depth="$max_depth_option"
+fi
+
+results_cycle_option=$(tmux show-option -gqv "@tea-results-cycle")
+results_cycle=""
+if [[ "$results_cycle_option" == "true" ]]; then
+    results_cycle="--cycle"
+fi
+
 preview_position_option=$(tmux show-option -gqv "@tea-preview-position")
 preview_position=${preview_position_option:-"top"}
 
@@ -24,7 +36,7 @@ t_bind="ctrl-t:abort"
 tab_bind="tab:down,btab:up"
 session_bind="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')+change-preview-window($preview_position,85%)"
 zoxide_bind="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$home_replacer\")+change-preview(eval $dir_preview_cmd {})+change-preview-window(right)"
-find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d 2 -t d . ~)+change-preview($dir_preview_cmd {})+change-preview-window(right)"
+find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d $max_depth -t d . ~)+change-preview($dir_preview_cmd {})+change-preview-window(right)"
 window_bind="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($session_preview_cmd {})+change-preview-window($preview_position)"
 kill_bind="ctrl-x:change-prompt(  )+execute-silent(tmux kill-session -t {})+reload-sync(tmux list-sessions -F '#S' && zoxide query -l | sed -e \"$home_replacer\")"
 
@@ -75,7 +87,7 @@ else
             --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$t_bind" \
             --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$border_label" --header "$header" \
             --no-sort --prompt "$prompt" --marker "$marker" --preview "$preview" \
-            --preview-window="$preview_position",75% "$fzf_tmux_options" --layout="$layout")
+            --preview-window="$preview_position",75% "$fzf_tmux_options" --layout="$layout" $results_cycle)
         ;;
     detached)
         result=$(get_fzf_results | fzf \

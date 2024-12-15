@@ -44,7 +44,7 @@ It's a one key solution to all your tmux session needs.
 
 ### ⚡ Requirements
 
-- tmux, fzf, zoxide (required)
+- tmux, fd, fzf, zoxide (required)
 - tmuxinator (for session layouts)
 - eza (for directory previews)
 
@@ -125,6 +125,22 @@ You can set the **input position** to "default", "reverse" or "reverse-list", de
 
 ```tmux
 set -g @tea-layout "reverse"
+```
+
+#### cycle/wrap results
+
+Set to "true" to be able to cycle through the results, default is false.
+
+```tmux
+set -g @tea-results-cycle "true"
+```
+
+#### change max depth for find files mode
+
+Set the max depth used by the find mode, default depth is "2".
+
+```tmux
+set -g @tea-max-depth "3"
 ```
 
 ## Behind The Code
