@@ -11,6 +11,9 @@ if [[ ! -d "$find_path" ]]; then
     find_path="~"
 fi
 
+show_nth_option=$(tmux show-option -gqv "@tea-show-nth")
+show_nth=${show_nth_option:-"-2,-1"}
+
 max_depth_option=$(tmux show-option -gqv "@tea-max-depth")
 max_depth=${max_depth_option:-"2"}
 
@@ -33,7 +36,7 @@ t_bind="ctrl-t:abort"
 tab_bind="tab:down,btab:up"
 session_bind="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')+change-preview-window($preview_position,85%)"
 zoxide_bind="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$home_replacer\")+change-preview(eval $dir_preview_cmd {})+change-preview-window(right)"
-find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d $max_depth -t d . $find_path)+change-preview($dir_preview_cmd {})+change-preview-window(right)"
+find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d $max_depth -t d . $find_path | sed 's|/$||')+change-preview($dir_preview_cmd {})+change-preview-window(right)"
 window_bind="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($session_preview_cmd {})+change-preview-window($preview_position)"
 kill_bind="ctrl-x:change-prompt(  )+execute-silent(tmux kill-session -t {})+reload-sync(tmux list-sessions -F '#S' && zoxide query -l | sed -e \"$home_replacer\")"
 
@@ -83,21 +86,21 @@ else
         result=$(get_fzf_results | fzf-tmux \
             --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$t_bind" \
             --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$border_label" --header "$header" \
-            --no-sort --prompt "$prompt" --marker "$marker" --preview "$preview" \
-            --preview-window="$preview_position",75% "$fzf_tmux_options" --layout="$layout" $results_cycle)
+            --no-sort --cycle --delimiter='/' --with-nth="$show_nth" --keep-right --prompt "$prompt" --marker "$marker" \
+            --preview "$preview" --preview-window="$preview_position",75% "$fzf_tmux_options" --layout="$layout")
         ;;
     detached)
         result=$(get_fzf_results | fzf \
             --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$t_bind" \
             --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$border_label" --header "$header" \
-            --no-sort --prompt "$prompt" --marker "$marker" --preview "$preview" \
-            --preview-window=top,75%)
+            --no-sort --cycle --delimiter='/' --with-nth="$show_nth" --keep-right --prompt "$prompt" --marker "$marker" \
+            --preview "$preview" --preview-window=top,75%)
         ;;
     serverless)
         result=$(get_fzf_results | fzf \
             --bind "$find_bind" --bind "$tab_bind" --bind "$zoxide_bind" --bind "$kill_bind" --bind "$t_bind" \
-            --border-label "$border_label" --header "$header" --no-sort --prompt "$prompt" --marker "$marker" \
-            --preview "$dir_preview_cmd {}")
+            --border-label "$border_label" --header "$header" --no-sort --cycle --delimiter='/' --with-nth="$show_nth" \
+            --keep-right --prompt "$prompt" --marker "$marker" --preview "$dir_preview_cmd {}")
         ;;
     esac
 fi

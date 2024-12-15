@@ -103,6 +103,17 @@ If you use zsh you can add the `<C-t>` binding outside tmux as well using this s
 bindkey -s '^T' ' tea^M ^M'
 ```
 
+#### show nth parts of the path
+
+You can set `tea-show-nth` option to show parts of the path, default is to show the last two dirs.
+
+```tmux
+# shows the second last (-2) and the last (-1) directories
+set -g @tea-show-nth "-2,-1"
+# if you want to show the last three directories
+set -g @tea-show-nth "-3,-2,-1"
+```
+
 #### full session names
 
 You can set the session name to be the full path you select instead of the directory using:
