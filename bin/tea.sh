@@ -12,8 +12,8 @@ if [[ "$max_depth_option" != "2" ]]; then
 fi
 
 results_cycle_option=$(tmux show-option -gqv "@tea-results-cycle")
-results_cycle=""
-if [[ "$results_cycle_option" == "true" ]]; then
+results_cycle="--cycle"
+if [[ "$results_cycle_option" != "true" ]]; then
     results_cycle="--cycle"
 fi
 

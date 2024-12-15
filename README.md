@@ -129,10 +129,10 @@ set -g @tea-layout "reverse"
 
 #### cycle/wrap results
 
-Set to "true" to be able to cycle through the results, default is false.
+Set to "false" to disable cycling through the results, default is "true".
 
 ```tmux
-set -g @tea-results-cycle "true"
+set -g @tea-results-cycle "false"
 ```
 
 #### change max depth for find files mode
