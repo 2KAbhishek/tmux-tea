@@ -3,7 +3,7 @@
 # home path fix for sed
 home_replacer=""
 fzf_tmux_options=${FZF_TMUX_OPTS:-"-p 90%"}
-[[ "$HOME" =~ ^[a-zA-Z0-9\-_/.@]+$ ]] && home_replacer="s|^$HOME/|~/|"
+[[ "$HOME" =~ ^[a-zA-Z0-9_/.@-]+$ ]] && home_replacer="s|^$HOME/|~/|"
 
 find_path_option=$(tmux show-option -gqv "@tea-find-path")
 find_path=${find_path_option:-"$HOME/Projects"}
