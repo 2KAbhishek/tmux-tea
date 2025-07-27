@@ -66,20 +66,84 @@ get_fzf_results() {
     fi
 }
 
-# if started with single argument
-if [[ $# -eq 1 ]]; then
-    if [[ -d "$1" ]]; then
-        result=$1
+create_and_attach_session() {
+    local result="$1"
+    local session_name
+
+    zoxide add "$result" &>/dev/null
+
+    if [[ $result != /* ]]; then # not a dir path
+        session_name=$result
     else
-        zoxide query "$1" &>/dev/null
-        zoxide_result_exit_code=$?
-        if [[ $zoxide_result_exit_code -eq 0 ]]; then
-            result=$(zoxide query "$1")
+        session_name_option=$(tmux show-option -gqv "@tea-session-name")
+        if [[ "$session_name_option" = "full-path" ]]; then
+            session_name="${result/$HOME/\~}"
         else
-            echo "No directory found."
+            session_name=$(basename "$result")
+        fi
+        session_name=$(echo "$session_name" | tr ' .:' '_')
+    fi
+
+    if [[ "$run_type" = "serverless" ]] || ! tmux has-session -t="$session_name" &>/dev/null; then
+        if [[ -e "$result"/.tmuxinator.yml ]] && command -v tmuxinator &>/dev/null; then
+            cd "$result" && tmuxinator local
+        elif [[ -e "$HOME/.config/tmuxinator/$session_name.yml" ]] && command -v tmuxinator &>/dev/null; then
+            tmuxinator "$session_name"
+        else
+            default_cmd=$(tmux show-option -gqv "@tea-default-command")
+            if [[ -n "$default_cmd" ]]; then
+                tmux new-session -d -s "$session_name" -c "$result" "$default_cmd"
+            else
+                tmux new-session -d -s "$session_name" -c "$result"
+            fi
+        fi
+    fi
+
+    case $run_type in
+    attached) tmux switch-client -t "$session_name" ;;
+    detached | serverless) tmux attach -t "$session_name" ;;
+    esac
+}
+
+# if started with arguments
+if [[ $# -ge 1 ]]; then
+    process_argument() {
+        local arg="$1"
+        local result
+
+        if [[ -d "$arg" ]]; then
+            result="$arg"
+        else
+            if zoxide query "$arg" &>/dev/null; then
+                result=$(zoxide query "$arg")
+            else
+                echo "No directory found for: $arg" >&2
+                return 1
+            fi
+        fi
+
+        [[ $home_replacer ]] && result=$(echo "$result" | sed -e "s|^~/|$HOME/|")
+        create_and_attach_session "$result"
+        return 0
+    }
+
+    if [[ $# -eq 1 ]]; then
+        process_argument "$1" || exit 1
+    else
+        # Multiple arguments - process each one
+        successful_sessions=0
+        for arg in "$@"; do
+            if process_argument "$arg"; then
+                ((successful_sessions++))
+            fi
+        done
+
+        if [[ $successful_sessions -eq 0 ]]; then
+            echo "No valid directories found for any arguments." >&2
             exit 1
         fi
     fi
+    exit 0
 else
     case $run_type in
     attached)
@@ -109,36 +173,4 @@ fi
 
 [[ $home_replacer ]] && result=$(echo "$result" | sed -e "s|^~/|$HOME/|")
 
-zoxide add "$result" &>/dev/null
-
-if [[ $result != /* ]]; then # not a dir path
-    session_name=$result
-else
-    session_name_option=$(tmux show-option -gqv "@tea-session-name")
-    if [[ "$session_name_option" = "full-path" ]]; then
-        session_name="${result/$HOME/\~}"
-    else
-        session_name=$(basename "$result")
-    fi
-    session_name=$(echo "$session_name" | tr ' .:' '_')
-fi
-
-if [[ "$run_type" = "serverless" ]] || ! tmux has-session -t="$session_name" &>/dev/null; then
-    if [[ -e "$result"/.tmuxinator.yml ]] && command -v tmuxinator &>/dev/null; then
-        cd "$result" && tmuxinator local
-    elif [[ -e "$HOME/.config/tmuxinator/$session_name.yml" ]] && command -v tmuxinator &>/dev/null; then
-        tmuxinator "$session_name"
-    else
-        default_cmd=$(tmux show-option -gqv "@tea-default-command")
-        if [[ -n "$default_cmd" ]]; then
-            tmux new-session -d -s "$session_name" -c "$result" "$default_cmd"
-        else
-            tmux new-session -d -s "$session_name" -c "$result"
-        fi
-    fi
-fi
-
-case $run_type in
-attached) tmux switch-client -t "$session_name" ;;
-detached | serverless) tmux attach -t "$session_name" ;;
-esac
+create_and_attach_session "$result"
