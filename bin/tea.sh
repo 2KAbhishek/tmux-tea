@@ -58,8 +58,13 @@ run_type="serverless"
 [[ "$tmux_running" -eq 0 ]] && run_type=$([[ "$TMUX" ]] && echo "attached" || echo "detached")
 
 get_sessions_by_last_used() {
-    tmux list-sessions -F '#{session_last_attached} #{session_name}' |
-        sort --numeric-sort --reverse | awk '{print $2}' | grep -v -E "^$(tmux display-message -p '#S')$"
+    local current_session
+    current_session=$(tmux display-message -p '#S' 2>/dev/null)
+    
+    tmux list-sessions -F '#{session_last_attached} #{session_name}' 2>/dev/null |
+        sort --numeric-sort --reverse |
+        awk '{print $2}' |
+        { [[ -n "$current_session" ]] && grep -v "^${current_session}$" || cat; }
 }
 
 get_zoxide_results() {
