@@ -12,11 +12,11 @@ get_tmux_option() {
     local option="$1"
     local default="$2"
     local value
-    
+
     if [[ -n "$TMUX_OPTIONS" ]]; then
         value=$(echo "$TMUX_OPTIONS" | grep "^$option " | cut -d' ' -f2- | tr -d '"')
     fi
-    
+
     echo "${value:-$default}"
 }
 
@@ -60,7 +60,7 @@ run_type="serverless"
 get_sessions_by_last_used() {
     local current_session
     current_session=$(tmux display-message -p '#S' 2>/dev/null)
-    
+
     tmux list-sessions -F '#{session_last_attached} #{session_name}' 2>/dev/null |
         sort --numeric-sort --reverse |
         awk '{print $2}' |
@@ -118,7 +118,7 @@ create_and_attach_session() {
 }
 
 show_help() {
-    cat << 'EOF'
+    cat <<'EOF'
 tmux-tea - tmux sessions as easy as tea
 
 USAGE:
@@ -149,38 +149,51 @@ For more information, see: https://github.com/2kabhishek/tmux-tea
 EOF
 }
 
-# if started with arguments
+validate_directory_arg() {
+    local arg="$1"
+
+    if [[ -d "$arg" ]]; then
+        echo "$arg"
+        return 0
+    elif zoxide query "$arg" &>/dev/null; then
+        zoxide query "$arg"
+        return 0
+    else
+        echo "No directory found for: $arg" >&2
+        return 1
+    fi
+}
+
+process_single_session() {
+    local result="$1"
+
+    [[ $home_replacer ]] && result=$(echo "$result" | sed -e "s|^~/|$HOME/|")
+    create_and_attach_session "$result"
+}
+
+process_argument() {
+    local arg="$1"
+    local result
+
+    if result=$(validate_directory_arg "$arg"); then
+        process_single_session "$result"
+        return 0
+    else
+        return 1
+    fi
+}
+
 if [[ $# -ge 1 ]]; then
     case "$1" in
-        -h|--help)
-            show_help
-            exit 0
-            ;;
+    -h | --help)
+        show_help
+        exit 0
+        ;;
     esac
-    process_argument() {
-        local arg="$1"
-        local result
-
-        if [[ -d "$arg" ]]; then
-            result="$arg"
-        else
-            if zoxide query "$arg" &>/dev/null; then
-                result=$(zoxide query "$arg")
-            else
-                echo "No directory found for: $arg" >&2
-                return 1
-            fi
-        fi
-
-        [[ $home_replacer ]] && result=$(echo "$result" | sed -e "s|^~/|$HOME/|")
-        create_and_attach_session "$result"
-        return 0
-    }
 
     if [[ $# -eq 1 ]]; then
         process_argument "$1" || exit 1
     else
-        # Multiple arguments - process each one
         successful_sessions=0
         for arg in "$@"; do
             if process_argument "$arg"; then
