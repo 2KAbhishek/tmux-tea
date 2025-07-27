@@ -117,8 +117,46 @@ create_and_attach_session() {
     esac
 }
 
+show_help() {
+    cat << 'EOF'
+tmux-tea - tmux sessions as easy as tea
+
+USAGE:
+    tea [OPTIONS] [DIRECTORY...]
+
+OPTIONS:
+    -h, --help      Show this help message
+
+ARGUMENTS:
+    DIRECTORY       One or more directories to open as tmux sessions
+                   Can be absolute paths or zoxide queries
+
+EXAMPLES:
+    tea                          # Interactive mode with fzf
+    tea ~/Projects/myapp         # Open session for ~/Projects/myapp
+    tea work personal            # Open multiple sessions using zoxide
+    tea ~/code/app1 ~/code/app2  # Open multiple sessions with paths
+
+KEYBINDINGS (Interactive mode):
+    Ctrl+f    Directory mode (find directories)
+    Ctrl+j    Zoxide mode (recent directories)
+    Ctrl+s    Session mode (existing sessions)
+    Ctrl+w    Window mode (existing windows)
+    Ctrl+x    Kill mode (delete sessions)
+    Ctrl+t    Toggle tea / exit
+
+For more information, see: https://github.com/2kabhishek/tmux-tea
+EOF
+}
+
 # if started with arguments
 if [[ $# -ge 1 ]]; then
+    case "$1" in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+    esac
     process_argument() {
         local arg="$1"
         local result
