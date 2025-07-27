@@ -5,23 +5,32 @@ home_replacer=""
 fzf_tmux_options=${FZF_TMUX_OPTS:-"-p 90%"}
 [[ "$HOME" =~ ^[a-zA-Z0-9_/.@-]+$ ]] && home_replacer="s|^$HOME/|~/|"
 
-find_path_option=$(tmux show-option -gqv "@tea-find-path")
-find_path=${find_path_option:-"$HOME/Projects"}
+# Cache tmux options for performance
+TMUX_OPTIONS=$(tmux show-options -g | grep "^@tea-")
+
+get_tmux_option() {
+    local option="$1"
+    local default="$2"
+    local value
+    
+    if [[ -n "$TMUX_OPTIONS" ]]; then
+        value=$(echo "$TMUX_OPTIONS" | grep "^$option " | cut -d' ' -f2- | tr -d '"')
+    fi
+    
+    echo "${value:-$default}"
+}
+
+find_path=$(get_tmux_option "@tea-find-path" "$HOME/Projects")
 if [[ ! -d "$find_path" ]]; then
     find_path="~"
 fi
 
-show_nth_option=$(tmux show-option -gqv "@tea-show-nth")
-show_nth=${show_nth_option:-"-2,-1"}
-
-max_depth_option=$(tmux show-option -gqv "@tea-max-depth")
-max_depth=${max_depth_option:-"2"}
-
-preview_position_option=$(tmux show-option -gqv "@tea-preview-position")
-preview_position=${preview_position_option:-"top"}
-
-layout_option=$(tmux show-option -gqv "@tea-layout")
-layout=${layout_option:-"reverse"}
+show_nth=$(get_tmux_option "@tea-show-nth" "-2,-1")
+max_depth=$(get_tmux_option "@tea-max-depth" "2")
+preview_position=$(get_tmux_option "@tea-preview-position" "top")
+layout=$(get_tmux_option "@tea-layout" "reverse")
+session_name_style=$(get_tmux_option "@tea-session-name" "basename")
+default_command=$(get_tmux_option "@tea-default-command" "")
 
 session_preview_cmd="tmux capture-pane -ep -t"
 dir_preview_cmd="eza -ahlT -L=2 -s=extension --group-directories-first --icons --git --git-ignore --no-user --color=always --color-scale=all --color-scale-mode=gradient"
@@ -75,8 +84,7 @@ create_and_attach_session() {
     if [[ $result != /* ]]; then # not a dir path
         session_name=$result
     else
-        session_name_option=$(tmux show-option -gqv "@tea-session-name")
-        if [[ "$session_name_option" = "full-path" ]]; then
+        if [[ "$session_name_style" = "full-path" ]]; then
             session_name="${result/$HOME/\~}"
         else
             session_name=$(basename "$result")
@@ -90,9 +98,8 @@ create_and_attach_session() {
         elif [[ -e "$HOME/.config/tmuxinator/$session_name.yml" ]] && command -v tmuxinator &>/dev/null; then
             tmuxinator "$session_name"
         else
-            default_cmd=$(tmux show-option -gqv "@tea-default-command")
-            if [[ -n "$default_cmd" ]]; then
-                tmux new-session -d -s "$session_name" -c "$result" "$default_cmd"
+            if [[ -n "$default_command" ]]; then
+                tmux new-session -d -s "$session_name" -c "$result" "$default_command"
             else
                 tmux new-session -d -s "$session_name" -c "$result"
             fi
