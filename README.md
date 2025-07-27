@@ -35,10 +35,11 @@ It's a one key solution to all your tmux session needs.
 
 ## ✨ Features
 
-- Integrations with tmuxinator for session specific configs
-- Integrations with fzf for fuzzy search
-- Supports session previews
-- Integrations with zoxide for directory based session creation
+- **Fuzzy Search**: Integrations with fzf for intuitive session selection
+- **Smart Session Management**: Integrations with tmuxinator for session specific configs
+- **Session Previews**: Visual previews of existing sessions and directory contents
+- **Zoxide Integration**: Directory-based session creation with smart directory jumping
+- **Multiple Session Support**: Open multiple sessions at once by passing multiple arguments
 
 ## Setup
 
@@ -63,19 +64,42 @@ ln -sfnv $PWD/bin/tea.sh  ~/.local/bin/tea # Add tea to $PATH, make sure ~/.loca
 
 ### 💻 Usage
 
-There are two ways to open tea
+#### Command Line Usage
 
-- `<prefix> - t`, this can be configured with the `@tea-bind` option e.g: `set -g @tea-bind "t"`
-- <kbd>Ctrl</kbd>+<kbd>t</kbd> alternate binding, this can be configured with the `@tea-alt-bind` option, set it to `"false"` to disable
+```bash
+# Get help
+tea --help
 
-#### Keybindings
+# Interactive mode with fzf
+tea
 
-- <kbd>Ctrl</kbd>+<kbd>f</kbd> - Directory mode
-- <kbd>Ctrl</kbd>+<kbd>j</kbd> - Zoxide mode
-- <kbd>Ctrl</kbd>+<kbd>s</kbd> - Session mode
-- <kbd>Ctrl</kbd>+<kbd>w</kbd> - Window mode
-- <kbd>Ctrl</kbd>+<kbd>x</kbd> - Kill mode
-- <kbd>Ctrl</kbd>+<kbd>t</kbd> - Toggle tea
+# Single session
+tea ~/Projects/myapp
+
+# Multiple sessions
+tea work personal ~/Projects/app1 ~/Projects/app2
+
+# Mix paths and zoxide queries
+tea ~/code/frontend backend-service ~/docs
+```
+
+#### Tmux Key Bindings
+
+- `<prefix> + t` - Open tea (configurable with `@tea-bind`)
+- <kbd>Ctrl</kbd>+<kbd>t</kbd> - Alternate binding (configurable with `@tea-alt-bind`, set to `"false"` to disable)
+
+#### Interactive Mode Keybindings
+
+- <kbd>Ctrl</kbd>+<kbd>f</kbd> - Directory mode (find directories)
+- <kbd>Ctrl</kbd>+<kbd>j</kbd> - Zoxide mode (recent directories)
+- <kbd>Ctrl</kbd>+<kbd>s</kbd> - Session mode (existing sessions)
+- <kbd>Ctrl</kbd>+<kbd>w</kbd> - Window mode (existing windows)
+- <kbd>Ctrl</kbd>+<kbd>x</kbd> - Kill mode (delete sessions)
+- <kbd>Ctrl</kbd>+<kbd>t</kbd> - Toggle tea / exit
+
+### ⚙️ Configuration
+
+All configuration options have sensible defaults and can be customized via tmux options.
 
 #### tmuxinator integration
 
