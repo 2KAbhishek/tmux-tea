@@ -46,7 +46,7 @@ session_name_style=$(get_tmux_option "@tea-session-name" "$DEFAULT_SESSION_NAME_
 default_command=$(get_tmux_option "@tea-default-command" "")
 
 session_preview_cmd="tmux capture-pane -ep -t"
-dir_preview_cmd="eza -ahlT -L=2 -s=extension --group-directories-first --icons --git --git-ignore --no-user --color=always --color-scale=all --color-scale-mode=gradient"
+dir_preview_cmd="$(which eza) -ahlT -L=2 -s=extension --group-directories-first --icons --git --git-ignore --no-user --color=always --color-scale=all --color-scale-mode=gradient"
 preview="$session_preview_cmd {} 2&>/dev/null || eval $dir_preview_cmd {}"
 
 t_bind="ctrl-t:abort"
