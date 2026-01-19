@@ -138,6 +138,14 @@ set -g @tea-show-nth "-2,-1"
 set -g @tea-show-nth "-3,-2,-1"
 ```
 
+#### include tmux sessions in picker
+
+When in interactive mode, include active **tmux sessions** above directories. Defaults to "true".
+
+```tmux
+set -g @tea-include_sessions "true"
+```
+
 #### full session names
 
 You can set the session name to be the full path you select instead of the directory using:
@@ -170,6 +178,14 @@ Set the default directory used by the find mode, first fallback is `$HOME/Projec
 set -g @tea-find-path "$HOME/Projects"
 # You can also set it to the parent directory of PWD
 set -g @tea-find-path "$PWD/.."
+```
+
+#### directory preview options
+
+Set the **preview options** which will be passed to `eza`. Defaults to:
+
+```tmux
+set -g @tea-eza-options "-ahlT -L=2 -s=extension --group-directories-first --icons --git --git-ignore --no-user --color=always --color-scale=all --color-scale-mode=gradient"
 ```
 
 #### max depth for find mode

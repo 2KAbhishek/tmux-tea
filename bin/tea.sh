@@ -7,6 +7,8 @@ readonly DEFAULT_PREVIEW_POSITION="top"
 readonly DEFAULT_LAYOUT="reverse"
 readonly DEFAULT_SESSION_NAME_STYLE="basename"
 readonly DEFAULT_FZF_TMUX_OPTIONS="-p 90%"
+readonly DEFAULT_EZA_OPTIONS="-ahlT -L=2 -s=extension --group-directories-first --icons --git --git-ignore --no-user --color=always --color-scale=all --color-scale-mode=gradient"
+readonly INCLUDE_SESSIONS="true"
 
 readonly PROMPT='  '
 readonly MARKER=''
@@ -44,9 +46,11 @@ preview_position=$(get_tmux_option "@tea-preview-position" "$DEFAULT_PREVIEW_POS
 layout=$(get_tmux_option "@tea-layout" "$DEFAULT_LAYOUT")
 session_name_style=$(get_tmux_option "@tea-session-name" "$DEFAULT_SESSION_NAME_STYLE")
 default_command=$(get_tmux_option "@tea-default-command" "")
+eza_options=$(get_tmux_option "@tea-eza-options" "$DEFAULT_EZA_OPTIONS")
+include_sessions=$(get_tmux_option "@tea-include_sessions" "$INCLUDE_SESSIONS")
 
 session_preview_cmd="tmux capture-pane -ep -t"
-dir_preview_cmd="$(which eza) -ahlT -L=2 -s=extension --group-directories-first --icons --git --git-ignore --no-user --color=always --color-scale=all --color-scale-mode=gradient"
+dir_preview_cmd="$(which eza) ${eza_options}"
 preview="$session_preview_cmd {} 2&>/dev/null || eval $dir_preview_cmd {}"
 
 t_bind="ctrl-t:abort"
@@ -81,7 +85,7 @@ get_zoxide_results() {
 
 get_fzf_results() {
     if [[ "$tmux_running" -eq 0 ]]; then
-        sessions=$(get_sessions_by_last_used)
+        [[ "$include_sessions" == "true" ]] && sessions=$(get_sessions_by_last_used)
         [[ "$sessions" ]] && echo "$sessions" && get_zoxide_results || get_zoxide_results
     else
         get_zoxide_results
