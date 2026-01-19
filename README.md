@@ -143,7 +143,7 @@ set -g @tea-show-nth "-3,-2,-1"
 When in interactive mode, include active **tmux sessions** above directories. Defaults to "true".
 
 ```tmux
-set -g @tea-include_sessions "true"
+set -g @tea-include-sessions "true"
 ```
 
 #### full session names
