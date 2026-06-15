@@ -76,7 +76,11 @@ get_sessions_by_last_used() {
     tmux list-sessions -F '#{session_last_attached} #{session_name}' 2>/dev/null |
         sort --numeric-sort --reverse |
         awk '{print $2}' |
-        { [[ -n "$current_session" ]] && grep -v "^${current_session}$" || cat; }
+        if [[ -n "$current_session" ]]; then
+            grep -v "^${current_session}$"
+        else
+            cat
+        fi
 }
 
 get_zoxide_results() {
@@ -85,11 +89,15 @@ get_zoxide_results() {
 
 get_fzf_results() {
     if [[ "$tmux_running" -eq 0 ]]; then
-        [[ "$include_sessions" == "true" ]] && sessions=$(get_sessions_by_last_used)
-        [[ "$sessions" ]] && echo "$sessions" && get_zoxide_results || get_zoxide_results
-    else
-        get_zoxide_results
+        local sessions=""
+        if [[ "$include_sessions" == "true" ]]; then
+            sessions=$(get_sessions_by_last_used)
+        fi
+        if [[ -n "$sessions" ]]; then
+            echo "$sessions"
+        fi
     fi
+    get_zoxide_results
 }
 
 create_and_attach_session() {
@@ -179,7 +187,9 @@ validate_directory_arg() {
 process_single_session() {
     local result="$1"
 
-    [[ $home_replacer ]] && result=$(echo "$result" | sed -e "s|^~/|$HOME/|")
+    if [[ -n "$home_replacer" ]]; then
+        result="${result/#\~\//$HOME/}"
+    fi
     create_and_attach_session "$result"
 }
 
@@ -244,8 +254,10 @@ else
     esac
 fi
 
-[[ "$result" ]] || exit 0
+[[ -n "$result" ]] || exit 0
 
-[[ $home_replacer ]] && result=$(echo "$result" | sed -e "s|^~/|$HOME/|")
+if [[ -n "$home_replacer" ]]; then
+    result="${result/#\~\//$HOME/}"
+fi
 
 create_and_attach_session "$result"
