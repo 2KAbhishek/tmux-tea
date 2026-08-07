@@ -61,8 +61,8 @@ session_preview_cmd="tmux capture-pane -ep -t \$(echo {} | awk '{print \$1}')"
 dir_preview_cmd="$(which eza) ${eza_options}"
 preview="$session_preview_cmd 2&>/dev/null || eval $dir_preview_cmd {}"
 
-window_reload_cmd="tmux list-windows -a -F '#{window_activity} #{session_name}:#{window_index} #{window_name} #{pane_current_path}' | sort -nr | while read -r ts t n p; do sp=\$(echo \$p | sed -e \"$home_replacer\" | awk -F'/' '{if(NF>=2) print \$(NF-1)\"/\"\$(NF); else print \$0}'); echo \"\$t - \$n (\$sp)\"; done"
-pane_reload_cmd="tmux list-panes -a -F '#{window_activity} #{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_current_path}' | sort -nr | while read -r ts t c p; do sp=\$(echo \$p | sed -e \"$home_replacer\" | awk -F'/' '{if(NF>=2) print \$(NF-1)\"/\"\$(NF); else print \$0}'); echo \"\$t - \$c (\$sp)\"; done"
+window_reload_cmd="tmux list-windows -a -F '#{window_activity} #{session_name}:#{window_index} #{window_name} #{pane_current_path}' | sort -nr | awk -v home=\"\$HOME\" '{ sub(\"^\" home, \"~\", \$4); n = split(\$4, segs, \"/\"); short = (n >= 2) ? segs[n-1] \"/\" segs[n] : \$4; print \$2 \" - \" \$3 \" (\" short \")\"; }'"
+pane_reload_cmd="tmux list-panes -a -F '#{window_activity} #{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_current_path}' | sort -nr | awk -v home=\"\$HOME\" '{ sub(\"^\" home, \"~\", \$4); n = split(\$4, segs, \"/\"); short = (n >= 2) ? segs[n-1] \"/\" segs[n] : \$4; print \$2 \" - \" \$3 \" (\" short \")\"; }'"
 agent_reload_cmd="${pane_reload_cmd} | grep -iE '$agent_patterns'"
 
 t_bind="ctrl-t:abort"
@@ -102,21 +102,23 @@ get_sessions_by_last_used() {
 get_windows_results() {
     tmux list-windows -a -F '#{window_activity} #{session_name}:#{window_index} #{window_name} #{pane_current_path}' 2>/dev/null |
         sort -nr |
-        while read -r ts target name path; do
-            local short_path
-            short_path=$(echo "$path" | sed -e "$home_replacer" | awk -F'/' '{if(NF>=2) print $(NF-1)"/"$NF; else print $0}')
-            echo "${target} - ${name} (${short_path})"
-        done
+        awk -v home="$HOME" '{
+            sub("^" home, "~", $4);
+            n = split($4, segs, "/");
+            short = (n >= 2) ? segs[n-1] "/" segs[n] : $4;
+            print $2 " - " $3 " (" short ")";
+        }'
 }
 
 format_pane_targets() {
     tmux list-panes -a -F '#{window_activity} #{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_current_path}' 2>/dev/null |
         sort -nr |
-        while read -r ts target cmd path; do
-            local short_path
-            short_path=$(echo "$path" | sed -e "$home_replacer" | awk -F'/' '{if(NF>=2) print $(NF-1)"/"$NF; else print $0}')
-            echo "${target} - ${cmd} (${short_path})"
-        done
+        awk -v home="$HOME" '{
+            sub("^" home, "~", $4);
+            n = split($4, segs, "/");
+            short = (n >= 2) ? segs[n-1] "/" segs[n] : $4;
+            print $2 " - " $3 " (" short ")";
+        }'
 }
 
 get_panes_results() {
