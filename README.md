@@ -114,7 +114,7 @@ tea ~/code/frontend backend-service ~/docs
 - <kbd>Ctrl</kbd>+<kbd>w</kbd> - Window mode (existing windows)
 - <kbd>Ctrl</kbd>+<kbd>p</kbd> - Pane mode (existing panes)
 - <kbd>Ctrl</kbd>+<kbd>a</kbd> - Agent mode (running AI agents)
-- <kbd>Ctrl</kbd>+<kbd>x</kbd> - Kill mode (delete sessions)
+- <kbd>Ctrl</kbd>+<kbd>x</kbd> - Kill highlighted item (session, window, or pane)
 - <kbd>Ctrl</kbd>+<kbd>t</kbd> - Toggle tea / exit
 
 ### ⚙️ Configuration

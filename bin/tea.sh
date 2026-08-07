@@ -66,7 +66,8 @@ find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d $max_depth -t d . $fin
 window_bind="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 pane_bind="ctrl-p:change-prompt(  )+reload($pane_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 agent_bind="ctrl-a:change-prompt(  )+reload($agent_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
-kill_bind="ctrl-x:change-prompt(  )+execute-silent(tmux kill-session -t {})+reload-sync(tmux list-sessions -F '#S' && zoxide query -l | sed -e \"$home_replacer\")"
+kill_reload_cmd="if [[ \"\$FZF_PROMPT\" =~  ]]; then tmux list-windows -a -F '#{session_name}:#{window_index}'; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $pane_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $agent_reload_cmd; else tmux list-sessions -F '#S'; fi"
+kill_bind="ctrl-x:execute-silent(target=\$(echo {} | awk '{print \$1}'); if [[ \$target =~ ^([^:]+):([0-9]+)\.([0-9]+) ]]; then tmux kill-pane -t \$target; elif [[ \$target =~ ^([^:]+):([0-9]+)$ ]]; then tmux kill-window -t \$target; else tmux kill-session -t \$target; fi)+reload($kill_reload_cmd)"
 
 # determine if the tmux server is running
 tmux_running=1
@@ -226,7 +227,7 @@ KEYBINDINGS (Interactive mode):
     Ctrl+w         Window mode (existing windows)
     Ctrl+p         Pane mode (existing panes)
     Ctrl+a         Agent mode (running AI agents)
-    Ctrl+x         Kill mode (delete sessions)
+    Ctrl+x         Kill highlighted item (session, window, or pane)
     Ctrl+t         Toggle tea
 
 For more information, see: https://github.com/2kabhishek/tmux-tea
@@ -340,7 +341,7 @@ else
         init_results=$(get_panes_results)
         init_preview="$session_preview_cmd"
     elif [[ "$initial_mode" == "agent" ]]; then
-        init_prompt='🤖  '
+        init_prompt='  '
         init_results=$(get_agent_results)
         init_preview="$session_preview_cmd"
     elif [[ "$initial_mode" == "zoxide" ]]; then
