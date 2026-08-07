@@ -13,7 +13,7 @@ readonly DEFAULT_INCLUDE_SESSIONS="true"
 readonly PROMPT='  '
 readonly MARKER=''
 readonly BORDER_LABEL='   tmux-tea   '
-readonly HEADER='^f   ^j   ^s   ^w   ^x '
+readonly HEADER='^f   ^j   ^s   ^w   ^p   ^x  '
 
 # home path fix for sed
 home_replacer=""
@@ -59,6 +59,7 @@ session_bind="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')+
 zoxide_bind="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$home_replacer\")+change-preview(eval $dir_preview_cmd {})+change-preview-window(right)"
 find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d $max_depth -t d . $find_path | sed 's|/$||')+change-preview($dir_preview_cmd {})+change-preview-window(right)"
 window_bind="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($session_preview_cmd {})+change-preview-window($preview_position)"
+pane_bind="ctrl-p:change-prompt(  )+reload(tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index}')+change-preview($session_preview_cmd {})+change-preview-window($preview_position)"
 kill_bind="ctrl-x:change-prompt(  )+execute-silent(tmux kill-session -t {})+reload-sync(tmux list-sessions -F '#S' && zoxide query -l | sed -e \"$home_replacer\")"
 
 # determine if the tmux server is running
@@ -83,6 +84,14 @@ get_sessions_by_last_used() {
         fi
 }
 
+get_windows_results() {
+    tmux list-windows -a -F '#{session_name}:#{window_index}' 2>/dev/null
+}
+
+get_panes_results() {
+    tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index}' 2>/dev/null
+}
+
 get_zoxide_results() {
     zoxide query -l | sed -e "$home_replacer"
 }
@@ -103,6 +112,23 @@ get_fzf_results() {
 create_and_attach_session() {
     local result="$1"
     local session_name
+
+    # Handle pane target session_name:window_index.pane_index
+    if [[ "$result" =~ ^([^:]+):([0-9]+)\.([0-9]+)$ ]]; then
+        local target_session="${BASH_REMATCH[1]}"
+        local target_window="${BASH_REMATCH[2]}"
+        local target_pane="${BASH_REMATCH[3]}"
+        tmux switch-client -t "${target_session}:${target_window}.${target_pane}" 2>/dev/null || tmux select-pane -t "${target_session}:${target_window}.${target_pane}" 2>/dev/null
+        exit 0
+    fi
+
+    # Handle window target session_name:window_index
+    if [[ "$result" =~ ^([^:]+):([0-9]+)$ ]]; then
+        local target_session="${BASH_REMATCH[1]}"
+        local target_window="${BASH_REMATCH[2]}"
+        tmux switch-client -t "${target_session}:${target_window}" 2>/dev/null || tmux select-window -t "${target_session}:${target_window}" 2>/dev/null
+        exit 0
+    fi
 
     zoxide add "$result" &>/dev/null
 
@@ -146,6 +172,8 @@ USAGE:
 
 OPTIONS:
     -h, --help      Show this help message
+    -w, --window    Start directly in window picker mode
+    -p, --pane      Start directly in pane picker mode
 
 ARGUMENTS:
     DIRECTORY       One or more directories to open as tmux sessions
@@ -153,6 +181,8 @@ ARGUMENTS:
 
 EXAMPLES:
     tea                          # Interactive mode with fzf
+    tea -w                       # Interactive mode starting in window picker mode
+    tea -p                       # Interactive mode starting in pane picker mode
     tea ~/Projects/myapp         # Open session for ~/Projects/myapp
     tea work personal            # Open multiple sessions using zoxide
     tea ~/code/app1 ~/code/app2  # Open multiple sessions with paths
@@ -162,6 +192,7 @@ KEYBINDINGS (Interactive mode):
     Ctrl+j    Zoxide mode (recent directories)
     Ctrl+s    Session mode (existing sessions)
     Ctrl+w    Window mode (existing windows)
+    Ctrl+p    Pane mode (existing panes)
     Ctrl+x    Kill mode (delete sessions)
     Ctrl+t    Toggle tea / exit
 
@@ -205,14 +236,26 @@ process_argument() {
     fi
 }
 
+initial_mode="session"
+
 if [[ $# -ge 1 ]]; then
     case "$1" in
     -h | --help)
         show_help
         exit 0
         ;;
+    -w | --window)
+        initial_mode="window"
+        shift
+        ;;
+    -p | --pane)
+        initial_mode="pane"
+        shift
+        ;;
     esac
+fi
 
+if [[ $# -ge 1 ]]; then
     if [[ $# -eq 1 ]]; then
         process_argument "$1" || exit 1
     else
@@ -230,26 +273,40 @@ if [[ $# -ge 1 ]]; then
     fi
     exit 0
 else
+    if [[ "$initial_mode" == "window" ]]; then
+        init_prompt='  '
+        init_results=$(get_windows_results)
+        init_preview="$session_preview_cmd {}"
+    elif [[ "$initial_mode" == "pane" ]]; then
+        init_prompt='  '
+        init_results=$(get_panes_results)
+        init_preview="$session_preview_cmd {}"
+    else
+        init_prompt="$PROMPT"
+        init_results=$(get_fzf_results)
+        init_preview="$preview"
+    fi
+
     case $run_type in
     attached)
-        result=$(get_fzf_results | fzf-tmux \
-            --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$t_bind" \
+        result=$(echo "$init_results" | fzf-tmux \
+            --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$pane_bind" --bind "$t_bind" \
             --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$BORDER_LABEL" --header "$HEADER" \
-            --no-sort --cycle --delimiter='/' --with-nth="$show_nth" --keep-right --prompt "$PROMPT" --marker "$MARKER" \
-            --preview "$preview" --preview-window="$preview_position",75% "$fzf_tmux_options" --layout="$layout")
+            --no-sort --cycle --delimiter='/' --with-nth="$show_nth" --keep-right --prompt "$init_prompt" --marker "$MARKER" \
+            --preview "$init_preview" --preview-window="$preview_position",75% "$fzf_tmux_options" --layout="$layout")
         ;;
     detached)
-        result=$(get_fzf_results | fzf \
-            --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$t_bind" \
+        result=$(echo "$init_results" | fzf \
+            --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$pane_bind" --bind "$t_bind" \
             --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$BORDER_LABEL" --header "$HEADER" \
-            --no-sort --cycle --delimiter='/' --with-nth="$show_nth" --keep-right --prompt "$PROMPT" --marker "$MARKER" \
-            --preview "$preview" --preview-window=top,75%)
+            --no-sort --cycle --delimiter='/' --with-nth="$show_nth" --keep-right --prompt "$init_prompt" --marker "$MARKER" \
+            --preview "$init_preview" --preview-window=top,75%)
         ;;
     serverless)
-        result=$(get_fzf_results | fzf \
+        result=$(echo "$init_results" | fzf \
             --bind "$find_bind" --bind "$tab_bind" --bind "$zoxide_bind" --bind "$kill_bind" --bind "$t_bind" \
             --border-label "$BORDER_LABEL" --header "$HEADER" --no-sort --cycle --delimiter='/' --with-nth="$show_nth" \
-            --keep-right --prompt "$PROMPT" --marker "$MARKER" --preview "$dir_preview_cmd {}")
+            --keep-right --prompt "$init_prompt" --marker "$MARKER" --preview "$dir_preview_cmd {}")
         ;;
     esac
 fi
