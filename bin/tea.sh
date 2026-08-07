@@ -55,6 +55,7 @@ preview="$session_preview_cmd 2&>/dev/null || eval $dir_preview_cmd {}"
 
 agent_patterns="antigravity|agy|aider|claude|copilot|codex|goose|interpreter|cline|cursor|windsurf|devin|openhands|swe-agent|autogpt"
 
+window_reload_cmd="tmux list-windows -a -F '#{session_name}:#{window_index} #{window_name} #{pane_current_path}' | while read -r t n p; do sp=\$(echo \$p | sed -e \"$home_replacer\" | awk -F'/' '{if(NF>=2) print \$(NF-1)\"/\"\$(NF); else print \$0}'); echo \"\$t - \$n (\$sp)\"; done"
 pane_reload_cmd="tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_current_path}' | while read -r t c p; do sp=\$(echo \$p | sed -e \"$home_replacer\" | awk -F'/' '{if(NF>=2) print \$(NF-1)\"/\"\$(NF); else print \$0}'); echo \"\$t - \$c (\$sp)\"; done"
 agent_reload_cmd="${pane_reload_cmd} | grep -iE '$agent_patterns'"
 
@@ -63,10 +64,11 @@ tab_bind="tab:down,btab:up"
 session_bind="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')+change-preview-window($preview_position,85%)"
 zoxide_bind="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$home_replacer\")+change-preview(eval $dir_preview_cmd {})+change-preview-window(right)"
 find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d $max_depth -t d . $find_path | sed 's|/$||')+change-preview($dir_preview_cmd {})+change-preview-window(right)"
-window_bind="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
+window_bind="ctrl-w:change-prompt(  )+reload($window_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 pane_bind="ctrl-p:change-prompt(  )+reload($pane_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 agent_bind="ctrl-a:change-prompt(  )+reload($agent_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
-kill_reload_cmd="if [[ \"\$FZF_PROMPT\" =~  ]]; then tmux list-windows -a -F '#{session_name}:#{window_index}'; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $pane_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $agent_reload_cmd; else tmux list-sessions -F '#S'; fi"
+
+kill_reload_cmd="if [[ \"\$FZF_PROMPT\" =~  ]]; then $window_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $pane_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $agent_reload_cmd; else tmux list-sessions -F '#S'; fi"
 kill_bind="ctrl-x:execute-silent(target=\$(echo {} | awk '{print \$1}'); if [[ \$target =~ ^([^:]+):([0-9]+)\.([0-9]+) ]]; then tmux kill-pane -t \$target; elif [[ \$target =~ ^([^:]+):([0-9]+)$ ]]; then tmux kill-window -t \$target; else tmux kill-session -t \$target; fi)+reload($kill_reload_cmd)"
 
 # determine if the tmux server is running
@@ -92,7 +94,12 @@ get_sessions_by_last_used() {
 }
 
 get_windows_results() {
-    tmux list-windows -a -F '#{session_name}:#{window_index}' 2>/dev/null
+    tmux list-windows -a -F '#{session_name}:#{window_index} #{window_name} #{pane_current_path}' 2>/dev/null |
+        while read -r target name path; do
+            local short_path
+            short_path=$(echo "$path" | sed -e "$home_replacer" | awk -F'/' '{if(NF>=2) print $(NF-1)"/"$NF; else print $0}')
+            echo "${target} - ${name} (${short_path})"
+        done
 }
 
 format_pane_targets() {
@@ -147,7 +154,7 @@ create_and_attach_session() {
         exit 0
     fi
 
-    # Handle window target: session_name:window_index
+    # Handle window target: session_name:window_index - name (path)
     local window_target_regex='^([^:]+):([0-9]+)'
     if [[ "$result" =~ $window_target_regex ]]; then
         local target_session="${BASH_REMATCH[1]}"
