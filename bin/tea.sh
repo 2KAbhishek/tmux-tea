@@ -59,7 +59,7 @@ session_bind="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')+
 zoxide_bind="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$home_replacer\")+change-preview(eval $dir_preview_cmd {})+change-preview-window(right)"
 find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d $max_depth -t d . $find_path | sed 's|/$||')+change-preview($dir_preview_cmd {})+change-preview-window(right)"
 window_bind="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($session_preview_cmd {})+change-preview-window($preview_position)"
-pane_bind="ctrl-p:change-prompt(  )+reload(tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index}')+change-preview($session_preview_cmd {})+change-preview-window($preview_position)"
+pane_bind="ctrl-p:change-prompt(  )+reload(tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index}')+change-preview($session_preview_cmd {})+change-preview-window($preview_position)"
 kill_bind="ctrl-x:change-prompt(  )+execute-silent(tmux kill-session -t {})+reload-sync(tmux list-sessions -F '#S' && zoxide query -l | sed -e \"$home_replacer\")"
 
 # determine if the tmux server is running
@@ -94,6 +94,10 @@ get_panes_results() {
 
 get_zoxide_results() {
     zoxide query -l | sed -e "$home_replacer"
+}
+
+get_find_results() {
+    fd -H -d "$max_depth" -t d . "$find_path" 2>/dev/null | sed 's|/$||'
 }
 
 get_fzf_results() {
@@ -172,8 +176,11 @@ USAGE:
 
 OPTIONS:
     -h, --help      Show this help message
+    -s, --session   Start directly in session picker mode
     -w, --window    Start directly in window picker mode
     -p, --pane      Start directly in pane picker mode
+    -z, --zoxide    Start directly in zoxide mode
+    -f, --find      Start directly in find mode
 
 ARGUMENTS:
     DIRECTORY       One or more directories to open as tmux sessions
@@ -181,11 +188,13 @@ ARGUMENTS:
 
 EXAMPLES:
     tea                          # Interactive mode with fzf
-    tea -w                       # Interactive mode starting in window picker mode
-    tea -p                       # Interactive mode starting in pane picker mode
+    tea -s                       # Start directly in session picker mode
+    tea -w                       # Start directly in window picker mode
+    tea -p                       # Start directly in pane picker mode
+    tea -z                       # Start directly in zoxide recent directories mode
+    tea -f                       # Start directly in find mode
     tea ~/Projects/myapp         # Open session for ~/Projects/myapp
     tea work personal            # Open multiple sessions using zoxide
-    tea ~/code/app1 ~/code/app2  # Open multiple sessions with paths
 
 KEYBINDINGS (Interactive mode):
     Ctrl+f    Directory mode (find directories)
@@ -236,7 +245,7 @@ process_argument() {
     fi
 }
 
-initial_mode="session"
+initial_mode="default"
 
 if [[ $# -ge 1 ]]; then
     case "$1" in
@@ -244,12 +253,24 @@ if [[ $# -ge 1 ]]; then
         show_help
         exit 0
         ;;
+    -s | --session)
+        initial_mode="session"
+        shift
+        ;;
     -w | --window)
         initial_mode="window"
         shift
         ;;
     -p | --pane)
         initial_mode="pane"
+        shift
+        ;;
+    -z | --zoxide)
+        initial_mode="zoxide"
+        shift
+        ;;
+    -f | --find)
+        initial_mode="find"
         shift
         ;;
     esac
@@ -273,14 +294,26 @@ if [[ $# -ge 1 ]]; then
     fi
     exit 0
 else
-    if [[ "$initial_mode" == "window" ]]; then
+    if [[ "$initial_mode" == "session" ]]; then
+        init_prompt='  '
+        init_results=$(get_sessions_by_last_used)
+        init_preview="$session_preview_cmd {}"
+    elif [[ "$initial_mode" == "window" ]]; then
         init_prompt='  '
         init_results=$(get_windows_results)
         init_preview="$session_preview_cmd {}"
     elif [[ "$initial_mode" == "pane" ]]; then
-        init_prompt='  '
+        init_prompt='  '
         init_results=$(get_panes_results)
         init_preview="$session_preview_cmd {}"
+    elif [[ "$initial_mode" == "zoxide" ]]; then
+        init_prompt='  '
+        init_results=$(get_zoxide_results)
+        init_preview="eval $dir_preview_cmd {}"
+    elif [[ "$initial_mode" == "find" ]]; then
+        init_prompt='  '
+        init_results=$(get_find_results)
+        init_preview="$dir_preview_cmd {}"
     else
         init_prompt="$PROMPT"
         init_results=$(get_fzf_results)
