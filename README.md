@@ -166,6 +166,15 @@ When in interactive mode, include active **tmux sessions** above directories. De
 set -g @tea-include-sessions "true"
 ```
 
+#### configurable AI agent mode patterns
+
+Custom AI agent process names can be added to be detected in AI Agent Mode (`tea -a` / `Ctrl+a`):
+
+```tmux
+# Default: antigravity|agy|aider|claude|copilot|codex|goose|interpreter|cline|cursor|windsurf|devin|openhands|swe-agent|autogpt
+set -g @tea-agent-patterns "my-custom-bot|custom-agent"
+```
+
 #### full session names
 
 You can set the session name to be the full path you select instead of the directory using:

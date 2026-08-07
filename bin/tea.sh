@@ -48,12 +48,18 @@ session_name_style=$(get_tmux_option "@tea-session-name" "$DEFAULT_SESSION_NAME_
 default_command=$(get_tmux_option "@tea-default-command" "")
 eza_options=$(get_tmux_option "@tea-eza-options" "$DEFAULT_EZA_OPTIONS")
 include_sessions=$(get_tmux_option "@tea-include-sessions" "$DEFAULT_INCLUDE_SESSIONS")
+custom_agent_patterns=$(get_tmux_option "@tea-agent-patterns" "")
+
+default_agent_patterns="antigravity|agy|aider|claude|copilot|codex|goose|interpreter|cline|cursor|windsurf|devin|openhands|swe-agent|autogpt"
+if [[ -n "$custom_agent_patterns" ]]; then
+    agent_patterns="${default_agent_patterns}|${custom_agent_patterns}"
+else
+    agent_patterns="$default_agent_patterns"
+fi
 
 session_preview_cmd="tmux capture-pane -ep -t \$(echo {} | awk '{print \$1}')"
 dir_preview_cmd="$(which eza) ${eza_options}"
 preview="$session_preview_cmd 2&>/dev/null || eval $dir_preview_cmd {}"
-
-agent_patterns="antigravity|agy|aider|claude|copilot|codex|goose|interpreter|cline|cursor|windsurf|devin|openhands|swe-agent|autogpt"
 
 window_reload_cmd="tmux list-windows -a -F '#{session_name}:#{window_index} #{window_name} #{pane_current_path}' | while read -r t n p; do sp=\$(echo \$p | sed -e \"$home_replacer\" | awk -F'/' '{if(NF>=2) print \$(NF-1)\"/\"\$(NF); else print \$0}'); echo \"\$t - \$n (\$sp)\"; done"
 pane_reload_cmd="tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_current_path}' | while read -r t c p; do sp=\$(echo \$p | sed -e \"$home_replacer\" | awk -F'/' '{if(NF>=2) print \$(NF-1)\"/\"\$(NF); else print \$0}'); echo \"\$t - \$c (\$sp)\"; done"
