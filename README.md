@@ -73,6 +73,21 @@ tea --help
 # Interactive mode with fzf
 tea
 
+# Start directly in session picker mode
+tea -s
+
+# Start directly in window picker mode
+tea -w
+
+# Start directly in pane picker mode
+tea -p
+
+# Start directly in zoxide recent directories mode
+tea -z
+
+# Start directly in find mode
+tea -f
+
 # Single session
 tea ~/Projects/myapp
 
@@ -94,6 +109,7 @@ tea ~/code/frontend backend-service ~/docs
 - <kbd>Ctrl</kbd>+<kbd>j</kbd> - Zoxide mode (recent directories)
 - <kbd>Ctrl</kbd>+<kbd>s</kbd> - Session mode (existing sessions)
 - <kbd>Ctrl</kbd>+<kbd>w</kbd> - Window mode (existing windows)
+- <kbd>Ctrl</kbd>+<kbd>p</kbd> - Pane mode (existing panes)
 - <kbd>Ctrl</kbd>+<kbd>x</kbd> - Kill mode (delete sessions)
 - <kbd>Ctrl</kbd>+<kbd>t</kbd> - Toggle tea / exit
 
