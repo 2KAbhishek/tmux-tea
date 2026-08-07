@@ -54,7 +54,9 @@ dir_preview_cmd="$(which eza) ${eza_options}"
 preview="$session_preview_cmd 2&>/dev/null || eval $dir_preview_cmd {}"
 
 agent_patterns="antigravity|agy|aider|claude|copilot|codex|goose|interpreter|cline|cursor|windsurf|devin|openhands|swe-agent|autogpt"
-agent_reload_cmd="tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{pane_current_command}' | grep -iE '$agent_patterns' | awk '{print \$1 \" - \" \$2}'"
+
+pane_reload_cmd="tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_current_path}' | while read -r t c p; do sp=\$(echo \$p | sed -e \"$home_replacer\" | awk -F'/' '{if(NF>=2) print \$(NF-1)\"/\"\$(NF); else print \$0}'); echo \"\$t - \$c (\$sp)\"; done"
+agent_reload_cmd="${pane_reload_cmd} | grep -iE '$agent_patterns'"
 
 t_bind="ctrl-t:abort"
 tab_bind="tab:down,btab:up"
@@ -62,7 +64,7 @@ session_bind="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')+
 zoxide_bind="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$home_replacer\")+change-preview(eval $dir_preview_cmd {})+change-preview-window(right)"
 find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d $max_depth -t d . $find_path | sed 's|/$||')+change-preview($dir_preview_cmd {})+change-preview-window(right)"
 window_bind="ctrl-w:change-prompt(  )+reload(tmux list-windows -a -F '#{session_name}:#{window_index}')+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
-pane_bind="ctrl-p:change-prompt(  )+reload(tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} - #{pane_current_command}')+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
+pane_bind="ctrl-p:change-prompt(  )+reload($pane_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 agent_bind="ctrl-a:change-prompt(  )+reload($agent_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 kill_bind="ctrl-x:change-prompt(  )+execute-silent(tmux kill-session -t {})+reload-sync(tmux list-sessions -F '#S' && zoxide query -l | sed -e \"$home_replacer\")"
 
@@ -92,14 +94,21 @@ get_windows_results() {
     tmux list-windows -a -F '#{session_name}:#{window_index}' 2>/dev/null
 }
 
+format_pane_targets() {
+    tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_current_path}' 2>/dev/null |
+        while read -r target cmd path; do
+            local short_path
+            short_path=$(echo "$path" | sed -e "$home_replacer" | awk -F'/' '{if(NF>=2) print $(NF-1)"/"$NF; else print $0}')
+            echo "${target} - ${cmd} (${short_path})"
+        done
+}
+
 get_panes_results() {
-    tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} - #{pane_current_command}' 2>/dev/null
+    format_pane_targets
 }
 
 get_agent_results() {
-    tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{pane_current_command}' 2>/dev/null |
-        grep -iE "$agent_patterns" |
-        awk '{print $1 " - " $2}'
+    format_pane_targets | grep -iE "$agent_patterns"
 }
 
 get_zoxide_results() {
@@ -127,7 +136,7 @@ create_and_attach_session() {
     local result="$1"
     local session_name
 
-    # Handle pane target: session_name:window_index.pane_index - command
+    # Handle pane target: session_name:window_index.pane_index - command (path)
     local pane_target_regex='^([^:]+):([0-9]+)\.([0-9]+)'
     if [[ "$result" =~ $pane_target_regex ]]; then
         local target_session="${BASH_REMATCH[1]}"
@@ -313,6 +322,11 @@ if [[ $# -ge 1 ]]; then
     fi
     exit 0
 else
+    nth_opts=""
+    if [[ "$initial_mode" == "default" || "$initial_mode" == "zoxide" || "$initial_mode" == "find" ]]; then
+        nth_opts="--delimiter=/ --with-nth=$show_nth --keep-right"
+    fi
+
     if [[ "$initial_mode" == "session" ]]; then
         init_prompt='  '
         init_results=$(get_sessions_by_last_used)
@@ -348,21 +362,21 @@ else
         result=$(echo "$init_results" | fzf-tmux \
             --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$pane_bind" --bind "$agent_bind" --bind "$t_bind" \
             --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$BORDER_LABEL" --header "$HEADER" \
-            --no-sort --cycle --delimiter='/' --with-nth="$show_nth" --keep-right --prompt "$init_prompt" --marker "$MARKER" \
+            --no-sort --cycle $nth_opts --prompt "$init_prompt" --marker "$MARKER" \
             --preview "$init_preview" --preview-window="$preview_position",75% "$fzf_tmux_options" --layout="$layout")
         ;;
     detached)
         result=$(echo "$init_results" | fzf \
             --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$pane_bind" --bind "$agent_bind" --bind "$t_bind" \
             --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$BORDER_LABEL" --header "$HEADER" \
-            --no-sort --cycle --delimiter='/' --with-nth="$show_nth" --keep-right --prompt "$init_prompt" --marker "$MARKER" \
+            --no-sort --cycle $nth_opts --prompt "$init_prompt" --marker "$MARKER" \
             --preview "$init_preview" --preview-window=top,75%)
         ;;
     serverless)
         result=$(echo "$init_results" | fzf \
             --bind "$find_bind" --bind "$tab_bind" --bind "$zoxide_bind" --bind "$kill_bind" --bind "$t_bind" \
-            --border-label "$BORDER_LABEL" --header "$HEADER" --no-sort --cycle --delimiter='/' --with-nth="$show_nth" \
-            --keep-right --prompt "$init_prompt" --marker "$MARKER" --preview "$dir_preview_cmd {}")
+            --border-label "$BORDER_LABEL" --header "$HEADER" --no-sort --cycle $nth_opts \
+            --prompt "$init_prompt" --marker "$MARKER" --preview "$dir_preview_cmd {}")
         ;;
     esac
 fi
