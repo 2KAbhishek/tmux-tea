@@ -187,38 +187,38 @@ USAGE:
     tea [OPTIONS] [DIRECTORY...]
 
 OPTIONS:
-    -h, --help      Show this help message
-    -s, --session   Start directly in session picker mode
-    -w, --window    Start directly in window picker mode
-    -p, --pane      Start directly in pane picker mode
-    -a, --agent     Start directly in AI agent mode
-    -z, --zoxide    Start directly in zoxide mode
-    -f, --find      Start directly in find mode
+    -h, --help     Show this help message
+    -s, --session  Start directly in session picker mode
+    -w, --window   Start directly in window picker mode
+    -p, --pane     Start directly in pane picker mode
+    -a, --agent    Start directly in AI agent mode
+    -z, --zoxide   Start directly in zoxide mode
+    -f, --find     Start directly in find mode
 
 ARGUMENTS:
-    DIRECTORY       One or more directories to open as tmux sessions
-                    Can be absolute paths or zoxide queries
+    DIRECTORY      One or more directories to open as tmux sessions
+                   Can be absolute paths or zoxide queries
 
 EXAMPLES:
-    tea                          # Interactive mode with fzf
-    tea -a                       # Start directly in AI agent mode
-    tea -s                       # Start directly in session picker mode
-    tea -w                       # Start directly in window picker mode
-    tea -p                       # Start directly in pane picker mode
-    tea -z                       # Start directly in zoxide recent directories mode
-    tea -f                       # Start directly in find mode
-    tea ~/Projects/myapp         # Open session for ~/Projects/myapp
-    tea work personal            # Open multiple sessions using zoxide
+    tea            # Interactive mode with fzf
+    tea -a         # Start directly in AI agent mode
+    tea -s         # Start directly in session picker mode
+    tea -w         # Start directly in window picker mode
+    tea -p         # Start directly in pane picker mode
+    tea -z         # Start directly in zoxide recent directories mode
+    tea -f         # Start directly in find mode
+    tea ~/myapp    # Open session for ~/Projects/myapp
+    tea dir1 dir2  # Open multiple sessions using zoxide
 
 KEYBINDINGS (Interactive mode):
-    Ctrl+f    Directory mode (find directories)
-    Ctrl+j    Zoxide mode (recent directories)
-    Ctrl+s    Session mode (existing sessions)
-    Ctrl+w    Window mode (existing windows)
-    Ctrl+p    Pane mode (existing panes)
-    Ctrl+a    Agent mode (running AI agents)
-    Ctrl+x    Kill mode (delete sessions)
-    Ctrl+t    Toggle tea / exit
+    Ctrl+f         Directory mode (find directories)
+    Ctrl+j         Zoxide mode (recent directories)
+    Ctrl+s         Session mode (existing sessions)
+    Ctrl+w         Window mode (existing windows)
+    Ctrl+p         Pane mode (existing panes)
+    Ctrl+a         Agent mode (running AI agents)
+    Ctrl+x         Kill mode (delete sessions)
+    Ctrl+t         Toggle tea
 
 For more information, see: https://github.com/2kabhishek/tmux-tea
 EOF
