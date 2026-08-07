@@ -82,6 +82,9 @@ tea -w
 # Start directly in pane picker mode
 tea -p
 
+# Start directly in AI agent mode
+tea -a
+
 # Start directly in zoxide recent directories mode
 tea -z
 
@@ -110,6 +113,7 @@ tea ~/code/frontend backend-service ~/docs
 - <kbd>Ctrl</kbd>+<kbd>s</kbd> - Session mode (existing sessions)
 - <kbd>Ctrl</kbd>+<kbd>w</kbd> - Window mode (existing windows)
 - <kbd>Ctrl</kbd>+<kbd>p</kbd> - Pane mode (existing panes)
+- <kbd>Ctrl</kbd>+<kbd>a</kbd> - Agent mode (running AI agents)
 - <kbd>Ctrl</kbd>+<kbd>x</kbd> - Kill mode (delete sessions)
 - <kbd>Ctrl</kbd>+<kbd>t</kbd> - Toggle tea / exit
 
