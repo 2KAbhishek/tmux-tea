@@ -20,13 +20,25 @@ home_replacer=""
 fzf_tmux_options=${FZF_TMUX_OPTS:-"$DEFAULT_FZF_TMUX_OPTIONS"}
 [[ "$HOME" =~ ^[a-zA-Z0-9_/.@-]+$ ]] && home_replacer="s|^$HOME/|~/|"
 
+declare -A TEA_OPTIONS
+while IFS=' ' read -r opt val; do
+    TEA_OPTIONS["$opt"]="$val"
+done < <(tmux show-options -g 2>/dev/null | grep "^@tea-")
+
 get_tmux_option() {
     local option="$1"
     local default="$2"
-    local value
+    local value="${TEA_OPTIONS[$option]}"
 
-    value=$(tmux show-option -gqv "$option")
-    printf '%s\n' "${value:-$default}"
+    if [ -n "$value" ]; then
+        value="${value#\"}"
+        value="${value%\"}"
+        value="${value#\'}"
+        value="${value%\'}"
+        printf '%s\n' "$value"
+    else
+        printf '%s\n' "$default"
+    fi
 }
 
 find_path=$(get_tmux_option "@tea-find-path" "$DEFAULT_FIND_PATH")

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CURRENT_DIR="${BASH_SOURCE[0]%/*}"
+[ "$CURRENT_DIR" = "${BASH_SOURCE[0]}" ] && CURRENT_DIR="."
 
 tmux_option_or_fallback() {
     local option_value
