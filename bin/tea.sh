@@ -42,8 +42,9 @@ get_tmux_option() {
 }
 
 find_path=$(get_tmux_option "@tea-find-path" "$DEFAULT_FIND_PATH")
+find_path="${find_path/#\~/$HOME}"
 if [[ ! -d "$find_path" ]]; then
-    find_path="~"
+    find_path="$HOME"
 fi
 
 show_nth=$(get_tmux_option "@tea-show-nth" "$DEFAULT_SHOW_NTH")
@@ -64,8 +65,14 @@ else
 fi
 
 session_preview_cmd="tmux capture-pane -ep -t \$(echo {} | awk '{print \$1}')"
-dir_preview_cmd="$(which eza) ${eza_options}"
-preview="$session_preview_cmd 2&>/dev/null || eval $dir_preview_cmd {}"
+if command -v eza &>/dev/null; then
+    dir_preview_cmd="sh -c 'p=\"\${1/#\\~/\$HOME}\"; eza ${eza_options} \"\$p\"' _ {}"
+elif command -v exa &>/dev/null; then
+    dir_preview_cmd="sh -c 'p=\"\${1/#\\~/\$HOME}\"; exa ${eza_options} \"\$p\"' _ {}"
+else
+    dir_preview_cmd="sh -c 'p=\"\${1/#\\~/\$HOME}\"; ls -la --color=always \"\$p\"' _ {}"
+fi
+preview="$session_preview_cmd 2>/dev/null || $dir_preview_cmd"
 
 window_reload_cmd="tmux list-windows -a -F '#{window_activity} #{session_name}:#{window_index} #{window_name} #{pane_current_path}' | sort -nr | awk -v home=\"\$HOME\" '{ sub(\"^\" home, \"~\", \$4); n = split(\$4, segs, \"/\"); short = (n >= 2) ? segs[n-1] \"/\" segs[n] : \$4; print \$2 \" - \" \$3 \" (\" short \")\"; }'"
 pane_reload_cmd="tmux list-panes -a -F '#{window_activity} #{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_current_path}' | sort -nr | awk -v home=\"\$HOME\" '{ sub(\"^\" home, \"~\", \$4); n = split(\$4, segs, \"/\"); short = (n >= 2) ? segs[n-1] \"/\" segs[n] : \$4; print \$2 \" - \" \$3 \" (\" short \")\"; }'"
@@ -73,9 +80,9 @@ agent_reload_cmd="${pane_reload_cmd} | grep -iE '$agent_patterns'"
 
 t_bind="ctrl-t:abort"
 tab_bind="tab:down,btab:up"
-session_bind="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')+change-preview-window($preview_position,85%)"
-zoxide_bind="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$home_replacer\")+change-preview(eval $dir_preview_cmd {})+change-preview-window(right)"
-find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d $max_depth -t d . $find_path | sed 's|/$||')+change-preview($dir_preview_cmd {})+change-preview-window(right)"
+session_bind="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')+change-preview($session_preview_cmd)+change-preview-window($preview_position,85%)"
+zoxide_bind="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$home_replacer\")+change-preview($dir_preview_cmd)+change-preview-window(right)"
+find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d $max_depth -t d . $find_path | sed 's|/$||')+change-preview($dir_preview_cmd)+change-preview-window(right)"
 window_bind="ctrl-w:change-prompt(  )+reload($window_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 pane_bind="ctrl-p:change-prompt(  )+reload($pane_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 agent_bind="ctrl-a:change-prompt(  )+reload($agent_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
@@ -370,11 +377,11 @@ else
     elif [[ "$initial_mode" == "zoxide" ]]; then
         init_prompt='  '
         init_results=$(get_zoxide_results)
-        init_preview="eval $dir_preview_cmd {}"
+        init_preview="$dir_preview_cmd"
     elif [[ "$initial_mode" == "find" ]]; then
         init_prompt='  '
         init_results=$(get_find_results)
-        init_preview="$dir_preview_cmd {}"
+        init_preview="$dir_preview_cmd"
     else
         init_prompt="$PROMPT"
         init_results=$(get_fzf_results)
@@ -394,13 +401,14 @@ else
             --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$pane_bind" --bind "$agent_bind" --bind "$t_bind" \
             --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$BORDER_LABEL" --header "$HEADER" \
             --no-sort --cycle $nth_opts --prompt "$init_prompt" --marker "$MARKER" \
-            --preview "$init_preview" --preview-window=top,75%)
+            --preview "$init_preview" --preview-window="$preview_position",75% --layout="$layout")
         ;;
     serverless)
         result=$(echo "$init_results" | fzf \
             --bind "$find_bind" --bind "$tab_bind" --bind "$zoxide_bind" --bind "$kill_bind" --bind "$t_bind" \
             --border-label "$BORDER_LABEL" --header "$HEADER" --no-sort --cycle $nth_opts \
-            --prompt "$init_prompt" --marker "$MARKER" --preview "$dir_preview_cmd {}")
+            --prompt "$init_prompt" --marker "$MARKER" --preview "$dir_preview_cmd" \
+            --preview-window="$preview_position",75% --layout="$layout")
         ;;
     esac
 fi
