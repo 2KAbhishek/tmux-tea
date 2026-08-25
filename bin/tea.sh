@@ -49,6 +49,10 @@ get_tmux_option() {
     local default="$2"
     local value="${TEA_OPTIONS[$option]}"
 
+    if [ -z "$value" ]; then
+        value="$(tmux show-option -gqv "$option" 2>/dev/null)"
+    fi
+
     if [ -n "$value" ]; then
         value="${value#\"}"
         value="${value%\"}"
@@ -57,6 +61,10 @@ get_tmux_option() {
         if [[ "$value" =~ ^\$[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
             local var_name="${value#\$}"
             value="${!var_name}"
+        elif [[ "$value" == *"\$HOME"* ]]; then
+            value="${value//\$HOME/$HOME}"
+        elif [[ "$value" == "~"* ]]; then
+            value="${value/#\~/$HOME}"
         fi
         printf '%s\n' "$value"
     else
