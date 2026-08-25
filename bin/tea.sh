@@ -20,10 +20,29 @@ home_replacer=""
 fzf_tmux_options=${FZF_TMUX_OPTS:-"$DEFAULT_FZF_TMUX_OPTIONS"}
 [[ "$HOME" =~ ^[a-zA-Z0-9_/.@-]+$ ]] && home_replacer="s|^$HOME/|~/|"
 
+# determine if the tmux server is running
+tmux_running=1
+tmux list-sessions &>/dev/null && tmux_running=0
+
+# determine the user's current position relative tmux:
+run_type="serverless"
+[[ "$tmux_running" -eq 0 ]] && run_type=$([[ "$TMUX" ]] && echo "attached" || echo "detached")
+
+# if tmux server is not running, start a temporary session to load user's tmux config options
+tmux_server_started_by_tea=0
+if [[ "$tmux_running" -ne 0 ]]; then
+    tmux new-session -d -s __tea_init__ 2>/dev/null
+    tmux_server_started_by_tea=1
+fi
+
 declare -A TEA_OPTIONS
 while IFS=' ' read -r opt val; do
     TEA_OPTIONS["$opt"]="$val"
 done < <(tmux show-options -g 2>/dev/null | grep "^@tea-")
+
+if [[ "$tmux_server_started_by_tea" -eq 1 ]]; then
+    tmux kill-session -t __tea_init__ 2>/dev/null
+fi
 
 get_tmux_option() {
     local option="$1"
@@ -35,6 +54,10 @@ get_tmux_option() {
         value="${value%\"}"
         value="${value#\'}"
         value="${value%\'}"
+        if [[ "$value" =~ ^\$[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+            local var_name="${value#\$}"
+            value="${!var_name}"
+        fi
         printf '%s\n' "$value"
     else
         printf '%s\n' "$default"
@@ -90,14 +113,6 @@ agent_bind="ctrl-a:change-prompt(  )+reload($agent_reload_cmd)+change-prev
 
 kill_reload_cmd="if [[ \"\$FZF_PROMPT\" =~  ]]; then $window_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $pane_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $agent_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then zoxide query -l | sed -e \"$home_replacer\"; elif [[ \"\$FZF_PROMPT\" =~  ]]; then fd -H -d $max_depth -t d . $find_path | sed 's|/$||'; else if [[ \"$include_sessions\" == \"true\" ]]; then $session_reload_cmd; fi; zoxide query -l | sed -e \"$home_replacer\"; fi"
 kill_bind="ctrl-x:execute-silent(target=\$(echo {} | awk '{print \$1}'); if [[ \$target =~ ^([^:]+):([0-9]+)\.([0-9]+) ]]; then tmux kill-pane -t \$target; elif [[ \$target =~ ^([^:]+):([0-9]+)$ ]]; then tmux kill-window -t \$target; elif [[ ! \$target =~ / ]] && tmux has-session -t \$target 2>/dev/null; then tmux kill-session -t \$target; fi)+reload($kill_reload_cmd)"
-
-# determine if the tmux server is running
-tmux_running=1
-tmux list-sessions &>/dev/null && tmux_running=0
-
-# determine the user's current position relative tmux:
-run_type="serverless"
-[[ "$tmux_running" -eq 0 ]] && run_type=$([[ "$TMUX" ]] && echo "attached" || echo "detached")
 
 get_sessions_by_last_used() {
     local current_session
