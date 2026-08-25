@@ -77,18 +77,19 @@ preview="$session_preview_cmd 2>/dev/null || $dir_preview_cmd"
 window_reload_cmd="tmux list-windows -a -F '#{window_activity} #{session_name}:#{window_index} #{window_name} #{pane_current_path}' | sort -nr | awk -v home=\"\$HOME\" '{ sub(\"^\" home, \"~\", \$4); n = split(\$4, segs, \"/\"); short = (n >= 2) ? segs[n-1] \"/\" segs[n] : \$4; print \$2 \" - \" \$3 \" (\" short \")\"; }'"
 pane_reload_cmd="tmux list-panes -a -F '#{window_activity} #{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_current_path}' | sort -nr | awk -v home=\"\$HOME\" '{ sub(\"^\" home, \"~\", \$4); n = split(\$4, segs, \"/\"); short = (n >= 2) ? segs[n-1] \"/\" segs[n] : \$4; print \$2 \" - \" \$3 \" (\" short \")\"; }'"
 agent_reload_cmd="${pane_reload_cmd} | grep -iE '$agent_patterns'"
+session_reload_cmd="curr=\$(tmux display-message -p '#S' 2>/dev/null); tmux list-sessions -F '#{?session_last_attached,#{session_last_attached},#{session_created}} #{session_name}' 2>/dev/null | sort -nr | awk '{print \$2}' | if [[ -n \"\$curr\" ]]; then grep -v -F -x \"\$curr\"; else cat; fi"
 
 t_bind="ctrl-t:abort"
 tab_bind="tab:down,btab:up"
-session_bind="ctrl-s:change-prompt(  )+reload(tmux list-sessions -F '#S')+change-preview($session_preview_cmd)+change-preview-window($preview_position,85%)"
+session_bind="ctrl-s:change-prompt(  )+reload($session_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position,85%)"
 zoxide_bind="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$home_replacer\")+change-preview($dir_preview_cmd)+change-preview-window(right)"
 find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d $max_depth -t d . $find_path | sed 's|/$||')+change-preview($dir_preview_cmd)+change-preview-window(right)"
 window_bind="ctrl-w:change-prompt(  )+reload($window_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 pane_bind="ctrl-p:change-prompt(  )+reload($pane_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 agent_bind="ctrl-a:change-prompt(  )+reload($agent_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 
-kill_reload_cmd="if [[ \"\$FZF_PROMPT\" =~  ]]; then $window_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $pane_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $agent_reload_cmd; else tmux list-sessions -F '#S'; fi"
-kill_bind="ctrl-x:execute-silent(target=\$(echo {} | awk '{print \$1}'); if [[ \$target =~ ^([^:]+):([0-9]+)\.([0-9]+) ]]; then tmux kill-pane -t \$target; elif [[ \$target =~ ^([^:]+):([0-9]+)$ ]]; then tmux kill-window -t \$target; else tmux kill-session -t \$target; fi)+reload($kill_reload_cmd)"
+kill_reload_cmd="if [[ \"\$FZF_PROMPT\" =~  ]]; then $window_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $pane_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $agent_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then zoxide query -l | sed -e \"$home_replacer\"; elif [[ \"\$FZF_PROMPT\" =~  ]]; then fd -H -d $max_depth -t d . $find_path | sed 's|/$||'; else if [[ \"$include_sessions\" == \"true\" ]]; then $session_reload_cmd; fi; zoxide query -l | sed -e \"$home_replacer\"; fi"
+kill_bind="ctrl-x:execute-silent(target=\$(echo {} | awk '{print \$1}'); if [[ \$target =~ ^([^:]+):([0-9]+)\.([0-9]+) ]]; then tmux kill-pane -t \$target; elif [[ \$target =~ ^([^:]+):([0-9]+)$ ]]; then tmux kill-window -t \$target; elif [[ ! \$target =~ / ]] && tmux has-session -t \$target 2>/dev/null; then tmux kill-session -t \$target; fi)+reload($kill_reload_cmd)"
 
 # determine if the tmux server is running
 tmux_running=1
@@ -102,11 +103,11 @@ get_sessions_by_last_used() {
     local current_session
     current_session=$(tmux display-message -p '#S' 2>/dev/null)
 
-    tmux list-sessions -F '#{session_last_attached} #{session_name}' 2>/dev/null |
+    tmux list-sessions -F '#{?session_last_attached,#{session_last_attached},#{session_created}} #{session_name}' 2>/dev/null |
         sort --numeric-sort --reverse |
         awk '{print $2}' |
         if [[ -n "$current_session" ]]; then
-            grep -v "^${current_session}$"
+            grep -v -F -x "${current_session}"
         else
             cat
         fi
