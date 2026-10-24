@@ -37,7 +37,8 @@ It's a one key solution to all your tmux session needs.
 
 - **Fuzzy Search**: Integrations with fzf for intuitive session selection
 - **Smart Session Management**: Integrations with tmuxinator for session specific configs
-- **Session Previews**: Visual previews of existing sessions and directory contents
+- **Session Previews**: Visual previews of existing sessions, git repositories, and directory contents
+- **Git & Repowatch Integration**: Direct repository switching and dirty project filtering
 - **Zoxide Integration**: Directory-based session creation with smart directory jumping
 - **Multiple Session Support**: Open multiple sessions at once by passing multiple arguments
 
@@ -85,6 +86,12 @@ tea -p
 # Start directly in AI agent mode
 tea -a
 
+# Start directly in git repository mode
+tea -g
+
+# Start directly in dirty repository mode
+tea -d
+
 # Start directly in zoxide recent directories mode
 tea -z
 
@@ -110,6 +117,8 @@ tea ~/code/frontend backend-service ~/docs
 
 - <kbd>Ctrl</kbd>+<kbd>f</kbd> - Directory mode (find directories)
 - <kbd>Ctrl</kbd>+<kbd>j</kbd> - Zoxide mode (recent directories)
+- <kbd>Ctrl</kbd>+<kbd>g</kbd> - Git mode (git repositories)
+- <kbd>Ctrl</kbd>+<kbd>d</kbd> - Dirty mode (repositories with uncommitted/unpushed changes)
 - <kbd>Ctrl</kbd>+<kbd>s</kbd> - Session mode (existing sessions)
 - <kbd>Ctrl</kbd>+<kbd>w</kbd> - Window mode (existing windows)
 - <kbd>Ctrl</kbd>+<kbd>p</kbd> - Pane mode (existing panes)
@@ -247,6 +256,7 @@ I wanted to add some more features that diverged from the original repo and want
 
 ### 🔍 More Info
 
+- [repowatch](https://github.com/2kabhishek/repowatch) — Interactive multi-repo monitor & git dashboard
 - [tmux-tilit](https://github.com/2kabhishek/tmux-tilit) — Turns tmux into a terminal window manager
 - [tmux2k](https://github.com/2kabhishek/tmux2k) — Makes your tmux statusbar pretty!
 

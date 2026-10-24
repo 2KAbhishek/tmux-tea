@@ -13,7 +13,7 @@ readonly DEFAULT_INCLUDE_SESSIONS="true"
 readonly PROMPT='  '
 readonly MARKER=''
 readonly BORDER_LABEL='   tmux-tea   '
-readonly HEADER='^f   ^j   ^s   ^w   ^p   ^a   ^x   '
+readonly HEADER='^f   ^j   ^g 󰊢  ^d   ^s   ^w   ^p   ^a   ^x   '
 
 # home path fix for sed
 home_replacer=""
@@ -80,6 +80,7 @@ fi
 
 show_nth=$(get_tmux_option "@tea-show-nth" "$DEFAULT_SHOW_NTH")
 max_depth=$(get_tmux_option "@tea-max-depth" "$DEFAULT_MAX_DEPTH")
+git_depth=$((max_depth + 1))
 preview_position=$(get_tmux_option "@tea-preview-position" "$DEFAULT_PREVIEW_POSITION")
 layout=$(get_tmux_option "@tea-layout" "$DEFAULT_LAYOUT")
 session_name_style=$(get_tmux_option "@tea-session-name" "$DEFAULT_SESSION_NAME_STYLE")
@@ -96,6 +97,7 @@ else
 fi
 
 session_preview_cmd="tmux capture-pane -ep -t \$(echo {} | awk '{print \$1}')"
+git_preview_cmd="sh -c 'p=\"\${1/#\\~/\$HOME}\"; if command -v repowatch &>/dev/null; then repowatch --preview-helper \"\$p\"; else git -c color.status=always --no-optional-locks -C \"\$p\" status -sb 2>/dev/null && echo && git -c color.ui=always --no-optional-locks -C \"\$p\" log -n 5 --graph --pretty=format:\"%C(yellow)%h%Creset %C(cyan)%cr%Creset %s\" 2>/dev/null; fi' _ {}"
 if command -v eza &>/dev/null; then
     dir_preview_cmd="sh -c 'p=\"\${1/#\\~/\$HOME}\"; eza ${eza_options} \"\$p\"' _ {}"
 elif command -v exa &>/dev/null; then
@@ -109,17 +111,21 @@ window_reload_cmd="tmux list-windows -a -F '#{window_activity} #{session_name}:#
 pane_reload_cmd="tmux list-panes -a -F '#{window_activity} #{session_name}:#{window_index}.#{pane_index} #{pane_current_command} #{pane_current_path}' | sort -nr | awk -v home=\"\$HOME\" '{ sub(\"^\" home, \"~\", \$4); n = split(\$4, segs, \"/\"); short = (n >= 2) ? segs[n-1] \"/\" segs[n] : \$4; print \$2 \" - \" \$3 \" (\" short \")\"; }'"
 agent_reload_cmd="${pane_reload_cmd} | grep -iE '$agent_patterns'"
 session_reload_cmd="curr=\$(tmux display-message -p '#S' 2>/dev/null); tmux list-sessions -F '#{?session_last_attached,#{session_last_attached},#{session_created}} #{session_name}' 2>/dev/null | sort -nr | awk '{print \$2}' | if [[ -n \"\$curr\" ]]; then grep -v -F -x \"\$curr\"; else cat; fi"
+git_reload_cmd="if command -v repowatch &>/dev/null; then repowatch --scan-helper \"$find_path\" true false $git_depth 2>/dev/null | sed '1,3d' | awk -F'\t' '\$NF ~ /^\// {print \$NF}' | sed -e \"$home_replacer\"; else fd -H -d $git_depth '^\.git$' \"$find_path\" 2>/dev/null | sed -E 's|/\.git/?$||' | sort -u | sed -e \"$home_replacer\"; fi"
+dirty_reload_cmd="if command -v repowatch &>/dev/null; then repowatch --scan-helper \"$find_path\" true true $git_depth 2>/dev/null | sed '1,3d' | awk -F'\t' '\$NF ~ /^\// {print \$NF}' | sed -e \"$home_replacer\"; else fd -H -d $git_depth '^\.git$' \"$find_path\" 2>/dev/null | sed -E 's|/\.git/?$||' | sort -u | while IFS= read -r r; do [ -n \"\$r\" ] && [ -n \"\$(git -C \"\$r\" status --porcelain 2>/dev/null)\" ] && echo \"\$r\"; done | sed -e \"$home_replacer\"; fi"
 
 t_bind="ctrl-t:abort"
 tab_bind="tab:down,btab:up"
 session_bind="ctrl-s:change-prompt(  )+reload($session_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position,85%)"
 zoxide_bind="ctrl-j:change-prompt(  )+reload(zoxide query -l | sed -e \"$home_replacer\")+change-preview($dir_preview_cmd)+change-preview-window(right)"
 find_bind="ctrl-f:change-prompt(  )+reload(fd -H -d $max_depth -t d . $find_path | sed 's|/$||')+change-preview($dir_preview_cmd)+change-preview-window(right)"
+git_bind="ctrl-g:change-prompt(󰊢  )+reload($git_reload_cmd)+change-preview($git_preview_cmd)+change-preview-window(right,60%)"
+dirty_bind="ctrl-d:change-prompt(  )+reload($dirty_reload_cmd)+change-preview($git_preview_cmd)+change-preview-window(right,60%)"
 window_bind="ctrl-w:change-prompt(  )+reload($window_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 pane_bind="ctrl-p:change-prompt(  )+reload($pane_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 agent_bind="ctrl-a:change-prompt(  )+reload($agent_reload_cmd)+change-preview($session_preview_cmd)+change-preview-window($preview_position)"
 
-kill_reload_cmd="if [[ \"\$FZF_PROMPT\" =~  ]]; then $window_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $pane_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $agent_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then zoxide query -l | sed -e \"$home_replacer\"; elif [[ \"\$FZF_PROMPT\" =~  ]]; then fd -H -d $max_depth -t d . $find_path | sed 's|/$||'; else if [[ \"$include_sessions\" == \"true\" ]]; then $session_reload_cmd; fi; zoxide query -l | sed -e \"$home_replacer\"; fi"
+kill_reload_cmd="if [[ \"\$FZF_PROMPT\" =~  ]]; then $window_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $pane_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $agent_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~ 󰊢 ]]; then $git_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then $dirty_reload_cmd; elif [[ \"\$FZF_PROMPT\" =~  ]]; then zoxide query -l | sed -e \"$home_replacer\"; elif [[ \"\$FZF_PROMPT\" =~  ]]; then fd -H -d $max_depth -t d . $find_path | sed 's|/$||'; else if [[ \"$include_sessions\" == \"true\" ]]; then $session_reload_cmd; fi; zoxide query -l | sed -e \"$home_replacer\"; fi"
 kill_bind="ctrl-x:execute-silent(target=\$(echo {} | awk '{print \$1}'); if [[ \$target =~ ^([^:]+):([0-9]+)\.([0-9]+) ]]; then tmux kill-pane -t \$target; elif [[ \$target =~ ^([^:]+):([0-9]+)$ ]]; then tmux kill-window -t \$target; elif [[ ! \$target =~ / ]] && tmux has-session -t \$target 2>/dev/null; then tmux kill-session -t \$target; fi)+reload($kill_reload_cmd)"
 
 get_sessions_by_last_used() {
@@ -172,6 +178,30 @@ get_zoxide_results() {
 
 get_find_results() {
     fd -H -d "$max_depth" -t d . "$find_path" 2>/dev/null | sed 's|/$||'
+}
+
+get_git_results() {
+    local git_depth=$((max_depth + 1))
+    if command -v repowatch &>/dev/null; then
+        repowatch --scan-helper "$find_path" true false "$git_depth" 2>/dev/null | sed '1,3d' | awk -F'\t' '$NF ~ /^\// {print $NF}' | sed -e "$home_replacer"
+    else
+        fd -H -d "$git_depth" '^\.git$' "$find_path" 2>/dev/null | sed -E 's|/\.git/?$||' | sort -u | sed -e "$home_replacer"
+    fi
+}
+
+get_dirty_results() {
+    local git_depth=$((max_depth + 1))
+    if command -v repowatch &>/dev/null; then
+        repowatch --scan-helper "$find_path" true true "$git_depth" 2>/dev/null | sed '1,3d' | awk -F'\t' '$NF ~ /^\// {print $NF}' | sed -e "$home_replacer"
+    else
+        local repo
+        while IFS= read -r repo; do
+            [ -n "$repo" ] || continue
+            if [ -n "$(git -C "$repo" status --porcelain 2>/dev/null)" ]; then
+                printf '%s\n' "$repo"
+            fi
+        done < <(fd -H -d "$git_depth" '^\.git$' "$find_path" 2>/dev/null | sed -E 's|/\.git/?$||' | sort -u) | sed -e "$home_replacer"
+    fi
 }
 
 get_fzf_results() {
@@ -256,6 +286,8 @@ OPTIONS:
     -w, --window   Start directly in window picker mode
     -p, --pane     Start directly in pane picker mode
     -a, --agent    Start directly in AI agent mode
+    -g, --git      Start directly in git repository mode
+    -d, --dirty    Start directly in dirty repository mode
     -z, --zoxide   Start directly in zoxide mode
     -f, --find     Start directly in find mode
 
@@ -266,6 +298,8 @@ ARGUMENTS:
 EXAMPLES:
     tea            # Interactive mode with fzf
     tea -a         # Start directly in AI agent mode
+    tea -g         # Start directly in git repository mode
+    tea -d         # Start directly in dirty repository mode
     tea -s         # Start directly in session picker mode
     tea -w         # Start directly in window picker mode
     tea -p         # Start directly in pane picker mode
@@ -277,6 +311,8 @@ EXAMPLES:
 KEYBINDINGS (Interactive mode):
     Ctrl+f         Directory mode (find directories)
     Ctrl+j         Zoxide mode (recent directories)
+    Ctrl+g         Git mode (git repositories)
+    Ctrl+d         Dirty mode (repositories with uncommitted/unpushed changes)
     Ctrl+s         Session mode (existing sessions)
     Ctrl+w         Window mode (existing windows)
     Ctrl+p         Pane mode (existing panes)
@@ -348,6 +384,14 @@ if [[ $# -ge 1 ]]; then
         initial_mode="agent"
         shift
         ;;
+    -g | --git)
+        initial_mode="git"
+        shift
+        ;;
+    -d | --dirty)
+        initial_mode="dirty"
+        shift
+        ;;
     -z | --zoxide)
         initial_mode="zoxide"
         shift
@@ -378,7 +422,7 @@ if [[ $# -ge 1 ]]; then
     exit 0
 else
     nth_opts=""
-    if [[ "$initial_mode" == "default" || "$initial_mode" == "zoxide" || "$initial_mode" == "find" ]]; then
+    if [[ "$initial_mode" == "default" || "$initial_mode" == "zoxide" || "$initial_mode" == "find" || "$initial_mode" == "git" || "$initial_mode" == "dirty" ]]; then
         nth_opts="--delimiter=/ --with-nth=$show_nth --keep-right"
     fi
 
@@ -398,6 +442,14 @@ else
         init_prompt='  '
         init_results=$(get_agent_results)
         init_preview="$session_preview_cmd"
+    elif [[ "$initial_mode" == "git" ]]; then
+        init_prompt='󰊢  '
+        init_results=$(get_git_results)
+        init_preview="$git_preview_cmd"
+    elif [[ "$initial_mode" == "dirty" ]]; then
+        init_prompt='  '
+        init_results=$(get_dirty_results)
+        init_preview="$git_preview_cmd"
     elif [[ "$initial_mode" == "zoxide" ]]; then
         init_prompt='  '
         init_results=$(get_zoxide_results)
@@ -415,29 +467,33 @@ else
     case $run_type in
     attached)
         result=$(echo "$init_results" | fzf-tmux \
-            --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$pane_bind" --bind "$agent_bind" --bind "$t_bind" \
+            --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$pane_bind" --bind "$agent_bind" --bind "$git_bind" --bind "$dirty_bind" --bind "$t_bind" \
             --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$BORDER_LABEL" --header "$HEADER" \
             --no-sort --cycle $nth_opts --prompt "$init_prompt" --marker "$MARKER" \
             --preview "$init_preview" --preview-window="$preview_position",75% "$fzf_tmux_options" --layout="$layout")
         ;;
     detached)
         result=$(echo "$init_results" | fzf \
-            --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$pane_bind" --bind "$agent_bind" --bind "$t_bind" \
+            --bind "$find_bind" --bind "$session_bind" --bind "$tab_bind" --bind "$window_bind" --bind "$pane_bind" --bind "$agent_bind" --bind "$git_bind" --bind "$dirty_bind" --bind "$t_bind" \
             --bind "$zoxide_bind" --bind "$kill_bind" --border-label "$BORDER_LABEL" --header "$HEADER" \
             --no-sort --cycle $nth_opts --prompt "$init_prompt" --marker "$MARKER" \
             --preview "$init_preview" --preview-window="$preview_position",75% --layout="$layout")
         ;;
     serverless)
         result=$(echo "$init_results" | fzf \
-            --bind "$find_bind" --bind "$tab_bind" --bind "$zoxide_bind" --bind "$kill_bind" --bind "$t_bind" \
+            --bind "$find_bind" --bind "$tab_bind" --bind "$zoxide_bind" --bind "$git_bind" --bind "$dirty_bind" --bind "$kill_bind" --bind "$t_bind" \
             --border-label "$BORDER_LABEL" --header "$HEADER" --no-sort --cycle $nth_opts \
-            --prompt "$init_prompt" --marker "$MARKER" --preview "$dir_preview_cmd" \
+            --prompt "$init_prompt" --marker "$MARKER" --preview "$init_preview" \
             --preview-window="$preview_position",75% --layout="$layout")
         ;;
     esac
 fi
 
 [[ -n "$result" ]] || exit 0
+
+if [[ "$result" == *$'\t'* ]]; then
+    result="${result##*$'\t'}"
+fi
 
 if [[ -n "$home_replacer" ]]; then
     result="${result/#\~\//$HOME/}"
